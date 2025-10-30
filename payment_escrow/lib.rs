@@ -2,103 +2,126 @@
 
 #[ink::contract]
 mod payment_escrow {
+    use ink::storage::Mapping;
+    use ink::primitives::{H160, U256};
 
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
+    #[derive(
+        ink::scale::Encode,
+        ink::scale::Decode,
+        Clone,
+        Debug,
+        PartialEq,
+        Eq,
+    )]
+    #[cfg_attr(
+        feature = "std",
+        derive(ink::scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct Escrow {
+        pub owner: H160,
+        pub provider: Option<H160>,
+        pub amount: U256,
+        pub released: bool,
+        pub refunded: bool,
+    }
+
     #[ink(storage)]
     pub struct PaymentEscrow {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        /// job_id -> Escrow record
+        escrows: Mapping<u128, Escrow>,
+        /// optional admin for emergency actions
+        admin: H160,
     }
 
     impl PaymentEscrow {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+        pub fn new() -> Self {
+            Self { escrows: Mapping::default(), admin: Self::env().caller() }
         }
 
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
-        #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
+        /// Deposits funds for a job and sets the intended provider.
+        /// Must be called by the job owner and is payable.
+        #[ink(message, payable)]
+        pub fn deposit_for_job(&mut self, job_id: u128, provider: H160) -> bool {
+            let caller = self.env().caller();
+            let amount = self.env().transferred_value();
+            if amount == 0.into() { return false; }
+            if let Some(existing) = self.escrows.get(job_id) {
+                // Prevent overwriting an active escrow
+                if !existing.released && !existing.refunded && existing.amount > 0.into() { return false; }
+            }
+            let escrow = Escrow { owner: caller, provider: Some(provider), amount, released: false, refunded: false };
+            self.escrows.insert(job_id, &escrow);
+            self.env().emit_event(Deposited { job_id, owner: caller, provider, amount });
+            true
         }
 
-        /// Simply returns the current value of our `bool`.
+        /// Sets/updates the provider for an existing job escrow. Only the owner can change it.
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn set_provider(&mut self, job_id: u128, provider: H160) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut e) = self.escrows.get(job_id) {
+                if caller != e.owner || e.released || e.refunded { return false; }
+                e.provider = Some(provider);
+                self.escrows.insert(job_id, &e);
+                self.env().emit_event(ProviderSet { job_id, provider });
+                true
+            } else { false }
         }
+
+        /// Releases funds to the assigned provider. Only the owner can release.
+        #[ink(message)]
+        pub fn release_to_provider(&mut self, job_id: u128) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut e) = self.escrows.get(job_id) {
+                if caller != e.owner || e.released || e.refunded { return false; }
+                let provider = match e.provider { Some(p) => p, None => return false };
+                let amount = e.amount;
+                if amount == 0.into() { return false; }
+                if self.env().transfer(provider, amount).is_err() { return false; }
+                e.released = true;
+                e.amount = 0.into();
+                self.escrows.insert(job_id, &e);
+                self.env().emit_event(Released { job_id, provider, amount });
+                true
+            } else { false }
+        }
+
+        /// Refunds funds back to the owner. Only the owner can refund.
+        #[ink(message)]
+        pub fn refund_to_owner(&mut self, job_id: u128) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut e) = self.escrows.get(job_id) {
+                if caller != e.owner || e.released || e.refunded { return false; }
+                let amount = e.amount;
+                if amount == 0.into() { return false; }
+                if self.env().transfer(e.owner, amount).is_err() { return false; }
+                e.refunded = true;
+                e.amount = 0.into();
+                self.escrows.insert(job_id, &e);
+                self.env().emit_event(Refunded { job_id, owner: e.owner, amount });
+                true
+            } else { false }
+        }
+
+        /// Returns the escrow record for a job, if any.
+        #[ink(message)]
+        pub fn get_escrow(&self, job_id: u128) -> Option<Escrow> { self.escrows.get(job_id) }
+
+        /// Admin address (optional usage for future controls)
+        #[ink(message)]
+        pub fn get_admin(&self) -> H160 { self.admin }
     }
 
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
+    #[ink(event)]
+    pub struct Deposited { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: H160, #[ink(topic)] pub provider: H160, pub amount: U256 }
+    #[ink(event)]
+    pub struct Released { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160, pub amount: U256 }
+    #[ink(event)]
+    pub struct Refunded { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: H160, pub amount: U256 }
+    #[ink(event)]
+    pub struct ProviderSet { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160 }
+
     #[cfg(test)]
-    mod tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// We test a simple use case of our contract.
-        #[ink::test]
-        fn it_works() {
-            let mut payment_escrow = PaymentEscrow::new(false);
-            assert_eq!(payment_escrow.get(), false);
-            payment_escrow.flip();
-            assert_eq!(payment_escrow.get(), true);
-        }
-    }
-
-
-    /// This is how you'd write end-to-end (E2E) or integration tests for ink! contracts.
-    ///
-    /// When running these you need to make sure that you:
-    /// - Compile the tests with the `e2e-tests` feature flag enabled (`--features e2e-tests`)
-    /// - Are running a Substrate node which contains `pallet-contracts` in the background
-    #[cfg(all(test, feature = "e2e-tests"))]
-    mod e2e_tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// A helper function used for calling contract messages.
-        use ink_e2e::ContractsBackend;
-
-        /// The End-to-End test `Result` type.
-        type E2EResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
-        /// We test that we can read and write a value from the on-chain contract.
-        #[ink_e2e::test]
-        async fn it_works(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-            // Given
-            let mut constructor = PaymentEscrowRef::new(false);
-            let contract = client
-                .instantiate("payment_escrow", &ink_e2e::bob(), &mut constructor)
-                .submit()
-                .await
-                .expect("instantiate failed");
-            let mut call_builder = contract.call_builder::<PaymentEscrow>();
-
-            let get = call_builder.get();
-            let get_result = client.call(&ink_e2e::bob(), &get).dry_run().await?;
-            assert!(matches!(get_result.return_value(), false));
-
-            // When
-            let flip = call_builder.flip();
-            let _flip_result = client
-                .call(&ink_e2e::bob(), &flip)
-                .submit()
-                .await
-                .expect("flip failed");
-
-            // Then
-            let get = call_builder.get();
-            let get_result = client.call(&ink_e2e::bob(), &get).dry_run().await?;
-            assert!(matches!(get_result.return_value(), true));
-
-            Ok(())
-        }
-    }
+    mod tests {}
 }
