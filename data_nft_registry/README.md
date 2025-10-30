@@ -26,7 +26,7 @@ graph TB
         A1[mint<br/>💵 Create new data NFT]
         A2[grant_access<br/>💵 Grant access with payment]
     end
-    
+
     subgraph "👤 Owner Functions"
         B1[transfer<br/>Transfer NFT if transferable]
         B2[approve<br/>Approve address for transfer]
@@ -35,7 +35,7 @@ graph TB
         B5[update_access_price<br/>Change access price]
         B6[burn<br/>Destroy NFT]
     end
-    
+
     subgraph "📊 Query Functions"
         C1[get_nft<br/>Retrieve NFT metadata]
         C2[balance_of<br/>Get NFT count]
@@ -44,7 +44,7 @@ graph TB
         C5[total_supply<br/>Total NFTs minted]
         C6[get_admin<br/>Get admin address]
     end
-    
+
     style A1 fill:#fff3cd
     style A2 fill:#fff3cd
     style B1 fill:#d1ecf1
@@ -68,30 +68,30 @@ graph TB
 ```mermaid
 stateDiagram-v2
     [*] --> Minted: mint() 💰
-    
+
     Minted --> Transferred: transfer() if transferable
     Transferred --> Transferred: transfer() again
-    
+
     Minted --> AccessGranted: grant_access() 💰
     Transferred --> AccessGranted: grant_access() 💰
     AccessGranted --> AccessRevoked: revoke_access()
-    
+
     Minted --> Burned: burn()
     Transferred --> Burned: burn()
-    
+
     Burned --> [*]
-    
+
     note right of Minted
         NFT created
         Owner = minter
         Access list empty
     end note
-    
+
     note right of AccessGranted
         3rd party granted access
         Owner retains ownership
     end note
-    
+
     note right of Burned
         NFT destroyed
         Cannot be recovered
@@ -111,7 +111,7 @@ graph LR
     C --> D[Set owner = caller]
     D --> E[Emit NFTMinted]
     E --> F[Return token_id: u128]
-    
+
     style A fill:#e1f5ff
     style B fill:#fff3cd
     style C fill:#d4edda
@@ -134,7 +134,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit NFTTransferred]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -145,6 +145,7 @@ graph LR
 ```
 
 **Requirements:**
+
 - Caller must be owner
 - `is_transferable == true`
 
@@ -160,7 +161,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit NFTApproved]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -182,7 +183,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit AccessGranted]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#fff3cd
     style C fill:#ffeaa7
@@ -193,6 +194,7 @@ graph LR
 ```
 
 **Requirements:**
+
 - Caller must be owner
 - `transferred_value >= access_price`
 
@@ -208,7 +210,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit AccessRevoked]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -230,7 +232,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit DataURIUpdated]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -252,7 +254,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit AccessPriceUpdated]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -274,7 +276,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit NFTBurned]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d1ecf1
     style C fill:#ffeaa7
@@ -296,7 +298,7 @@ graph TB
     D[has_access] -->|token_id, account| D1[Returns: bool]
     E[total_supply] --> E1[Returns: u128 total]
     F[get_admin] --> F1[Returns: H160 admin]
-    
+
     style A fill:#e2e3e5
     style B fill:#e2e3e5
     style C fill:#e2e3e5
@@ -327,7 +329,7 @@ graph LR
         E7[AccessPriceUpdated<br/>token_id, new_price]
         E8[NFTBurned<br/>token_id, owner]
     end
-    
+
     style E1 fill:#dfe6e9
     style E2 fill:#dfe6e9
     style E3 fill:#dfe6e9
@@ -355,7 +357,7 @@ classDiagram
         +U256 access_price
         +bool is_transferable
     }
-    
+
     note for DataNFT "Immutable:\n- token_id\n- minted_at\n\nMutable:\n- owner (via transfer)\n- data_uri (owner)\n- access_price (owner)\n\nFixed after mint:\n- privacy_level\n- is_transferable"
 ```
 
@@ -373,14 +375,14 @@ graph TB
         A -->|Can call| A5[update_data_uri]
         A -->|Can call| A6[update_access_price]
         A -->|Can call| A7[burn]
-        
+
         B[Admin] -->|Can call| B1[revoke_access any]
         B -->|Can call| B2[burn any]
-        
+
         C[Anyone] -->|Can call| C1[mint 💰]
         C -->|Can call| C2[Query functions]
     end
-    
+
     style A fill:#d1ecf1
     style B fill:#f8d7da
     style C fill:#e2e3e5
@@ -395,22 +397,22 @@ sequenceDiagram
     participant Alice
     participant Contract
     participant Bob
-    
+
     Alice->>Contract: mint(uri, privacy=1, price, transferable) 💰
     Contract-->>Alice: NFT #1 minted ✅
-    
+
     Bob->>Contract: grant_access(token_id=1, Bob) 💰
     Note over Bob: ❌ Only owner can grant
-    
+
     Alice->>Contract: grant_access(token_id=1, Bob) 💰
     Contract-->>Alice: Access granted to Bob ✅
-    
+
     Bob->>Contract: has_access(token_id=1, Bob)
     Contract-->>Bob: true ✅
-    
+
     Alice->>Contract: revoke_access(token_id=1, Bob)
     Contract-->>Alice: Access revoked ✅
-    
+
     Bob->>Contract: has_access(token_id=1, Bob)
     Contract-->>Bob: false ❌
 ```
@@ -427,7 +429,7 @@ graph LR
         C[100-199: Medium<br/>Restricted]
         D[200-255: High<br/>Confidential]
     end
-    
+
     style A fill:#d4edda
     style B fill:#fff3cd
     style C fill:#ffc107
@@ -435,12 +437,13 @@ graph LR
 ```
 
 **Privacy Level Usage:**
+
 - **0**: Public data, no restrictions
 - **1-99**: Low privacy, minimal protection
 - **100-199**: Medium privacy, restricted access
 - **200-255**: High privacy, highly confidential
 
-*Note: Privacy enforcement happens off-chain via access verification*
+_Note: Privacy enforcement happens off-chain via access verification_
 
 ---
 
@@ -453,33 +456,33 @@ graph TB
         A2[Token IDs auto-increment]
         A3[Minter becomes initial owner]
     end
-    
+
     subgraph "✅ Transfers"
         B1[Only owner can transfer]
         B2[Cannot transfer if is_transferable = false]
         B3[Approvals cleared on transfer]
         B4[Owner counts updated automatically]
     end
-    
+
     subgraph "✅ Access Control"
         C1[Owner has automatic access]
         C2[Must pay ≥ access_price to grant]
         C3[Owner can revoke anytime]
         C4[Admin can revoke any access]
     end
-    
+
     subgraph "✅ Updates"
         D1[Only owner can update data URI]
         D2[Only owner can update access price]
         D3[Settings persist across transfers]
     end
-    
+
     subgraph "✅ Burning"
         E1[Owner can burn their NFT]
         E2[Admin can burn any NFT]
         E3[Burned NFTs cannot be recovered]
     end
-    
+
     style A1 fill:#d4edda
     style A2 fill:#d4edda
     style A3 fill:#d4edda
@@ -504,21 +507,25 @@ graph TB
 ## 🛡️ Safety Features
 
 ✅ **Owner Rights:**
+
 - Full control over their NFTs
 - Can update metadata and pricing
 - Can grant/revoke access
 
 ✅ **Access Management:**
+
 - Payment required for access grants
 - Owner always has implicit access
 - Granular per-NFT access control
 
 ✅ **Transfer Control:**
+
 - NFTs can be made non-transferable
 - Useful for soulbound data tokens
 - Protects against unwanted transfers
 
 ✅ **Admin Oversight:**
+
 - Admin can moderate content (burn)
 - Admin can revoke malicious access
 - Emergency intervention capability

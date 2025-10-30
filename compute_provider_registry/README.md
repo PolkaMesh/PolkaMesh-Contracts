@@ -26,25 +26,25 @@ graph TB
         A1[register_provider<br/>💵 Register with stake]
         A2[add_stake<br/>💵 Increase stake]
     end
-    
+
     subgraph "👤 Provider Functions"
         B1[update_provider<br/>Update endpoint & rate]
         B2[set_active<br/>Toggle active status]
         B3[withdraw_stake<br/>Withdraw stake when inactive]
     end
-    
+
     subgraph "⚙️ Admin Functions"
         C1[set_reputation<br/>Update reputation score]
         C2[set_min_stake<br/>Update minimum stake]
     end
-    
+
     subgraph "📊 Query Functions"
         D1[get_provider<br/>Retrieve profile]
         D2[get_admin<br/>Get admin address]
         D3[get_provider_count<br/>Total providers]
         D4[get_min_stake<br/>Minimum stake value]
     end
-    
+
     style A1 fill:#fff3cd
     style A2 fill:#fff3cd
     style B1 fill:#d4edda
@@ -66,18 +66,18 @@ graph TB
 stateDiagram-v2
     [*] --> Unregistered
     Unregistered --> Active: register_provider() 💰
-    
+
     Active --> Inactive: set_active(false)
     Inactive --> Active: set_active(true)
-    
+
     Inactive --> [*]: withdraw_stake()
-    
+
     note right of Active
         Provider accepting jobs
         Can update profile
         Can add stake
     end note
-    
+
     note right of Inactive
         Provider not accepting jobs
         Can withdraw stake
@@ -99,7 +99,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit ProviderRegistered]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#fff3cd
     style C fill:#ffeaa7
@@ -110,6 +110,7 @@ graph LR
 ```
 
 **Requirements:**
+
 - `transferred_value >= min_stake`
 - Provider address not already registered
 
@@ -125,7 +126,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit ProviderUpdated]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d4edda
     style C fill:#ffeaa7
@@ -147,7 +148,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit ProviderActiveChanged]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d4edda
     style C fill:#ffeaa7
@@ -169,7 +170,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit StakeAdded]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#fff3cd
     style C fill:#ffeaa7
@@ -191,7 +192,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit StakeWithdrawn]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#d4edda
     style C fill:#ffeaa7
@@ -202,6 +203,7 @@ graph LR
 ```
 
 **Requirements:**
+
 - Provider must be inactive OR caller is admin
 - Sufficient stake available
 
@@ -217,7 +219,7 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Emit ReputationUpdated]
     D --> G[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#f8d7da
     style C fill:#ffeaa7
@@ -238,7 +240,7 @@ graph LR
     C -->|✅ Yes| D[Update min_stake]
     C -->|❌ No| E[Return false]
     D --> F[Return true]
-    
+
     style A fill:#e1f5ff
     style B fill:#f8d7da
     style C fill:#ffeaa7
@@ -257,7 +259,7 @@ graph TB
     B[get_admin] --> B1[Returns: H160 admin]
     C[get_provider_count] --> C1[Returns: u64 total]
     D[get_min_stake] --> D1[Returns: U256 minimum]
-    
+
     style A fill:#e2e3e5
     style B fill:#e2e3e5
     style C fill:#e2e3e5
@@ -282,7 +284,7 @@ graph LR
         E5[StakeWithdrawn<br/>provider, amount]
         E6[ReputationUpdated<br/>provider, score]
     end
-    
+
     style E1 fill:#dfe6e9
     style E2 fill:#dfe6e9
     style E3 fill:#dfe6e9
@@ -309,7 +311,7 @@ classDiagram
         +U256 stake
         +u32 reputation_score
     }
-    
+
     note for ProviderProfile "Immutable:\n- provider\n- registered_at\n\nMutable:\n- endpoint\n- compute_units\n- hourly_rate\n- is_active\n- stake\n- reputation_score"
 ```
 
@@ -325,17 +327,17 @@ graph TB
         A -->|Can call| A3[set_active]
         A -->|Can call| A4[add_stake 💰]
         A -->|Can call| A5[withdraw_stake inactive]
-        
+
         B[Admin] -->|Can call| B1[set_reputation]
         B -->|Can call| B2[set_min_stake]
         B -->|Can call| B3[withdraw_stake any]
-        
+
         C[Anyone] -->|Can call| C1[get_provider]
         C -->|Can call| C2[get_admin]
         C -->|Can call| C3[get_provider_count]
         C -->|Can call| C4[get_min_stake]
     end
-    
+
     style A fill:#d4edda
     style B fill:#f8d7da
     style C fill:#e2e3e5
@@ -350,22 +352,22 @@ sequenceDiagram
     participant Provider
     participant Contract
     participant Admin
-    
+
     Provider->>Contract: register_provider(endpoint, units, rate) 💰
     Contract-->>Provider: Registered ✅ (reputation = 100)
-    
+
     Provider->>Contract: update_provider(new_endpoint, new_rate)
     Contract-->>Provider: Updated ✅
-    
+
     Provider->>Contract: add_stake() 💰
     Contract-->>Provider: Stake increased ✅
-    
+
     Admin->>Contract: set_reputation(provider, score)
     Contract-->>Admin: Reputation updated ✅
-    
+
     Provider->>Contract: set_active(false)
     Contract-->>Provider: Inactive ✅
-    
+
     Provider->>Contract: withdraw_stake(amount)
     Contract->>Provider: Transfer funds 💸
     Contract-->>Provider: Withdrawn ✅
@@ -382,24 +384,24 @@ graph TB
         A2[Cannot register twice]
         A3[Initial reputation = 100]
     end
-    
+
     subgraph "✅ Updates"
         B1[Only provider can update own profile]
         B2[Only provider can toggle active status]
         B3[Only provider can add stake]
     end
-    
+
     subgraph "✅ Withdrawals"
         C1[Provider must be inactive to withdraw]
         C2[Admin can withdraw from any provider]
         C3[Cannot withdraw more than current stake]
     end
-    
+
     subgraph "✅ Admin Actions"
         D1[Only admin can set reputation]
         D2[Only admin can update min_stake]
     end
-    
+
     style A1 fill:#d4edda
     style A2 fill:#d4edda
     style A3 fill:#d4edda
@@ -422,7 +424,7 @@ graph LR
     A[New Provider] -->|Initial| B[Score: 100]
     B -->|Good Performance| C[Score: 101-1000]
     B -->|Poor Performance| D[Score: 0-99]
-    
+
     style A fill:#e2e3e5
     style B fill:#fff3cd
     style C fill:#d4edda
@@ -430,6 +432,7 @@ graph LR
 ```
 
 **Reputation Range:** 0 - 1000 (u32)
+
 - **100**: Default for new providers
 - **0-99**: Below average
 - **100-199**: Average
