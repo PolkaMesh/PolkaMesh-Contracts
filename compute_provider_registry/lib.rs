@@ -2,103 +2,185 @@
 
 #[ink::contract]
 mod compute_provider_registry {
+    use ink::prelude::string::String;
+    use ink::prelude::vec::Vec;
+    use ink::storage::Mapping;
+    use ink::primitives::{H160, U256};
 
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
+    #[derive(
+        ink::scale::Encode,
+        ink::scale::Decode,
+        Clone,
+        Debug,
+        PartialEq,
+        Eq,
+    )]
+    #[cfg_attr(
+        feature = "std",
+        derive(ink::scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct ProviderProfile {
+        pub provider: H160,
+        pub endpoint: String,
+        pub compute_units: u64,
+        pub hourly_rate: U256,
+        pub registered_at: u64,
+        pub is_active: bool,
+        pub stake: U256,
+        pub reputation_score: u32,
+    }
+
     #[ink(storage)]
     pub struct ComputeProviderRegistry {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        /// provider address -> profile
+        providers: Mapping<H160, ProviderProfile>,
+        /// optional stake requirement for registration
+        min_stake: U256,
+        /// admin for future controls
+        admin: H160,
+        /// provider count for enumeration or stats
+        provider_count: u64,
     }
 
     impl ComputeProviderRegistry {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+        pub fn new(min_stake: U256) -> Self {
+            Self {
+                providers: Mapping::default(),
+                min_stake,
+                admin: Self::env().caller(),
+                provider_count: 0,
+            }
         }
 
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
-        #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
+        /// Register as a compute provider. Requires attached stake >= min_stake.
+        #[ink(message, payable)]
+        pub fn register_provider(&mut self, endpoint: String, compute_units: u64, hourly_rate: U256) -> bool {
+            let caller = self.env().caller();
+            let stake = self.env().transferred_value();
+            if stake < self.min_stake { return false; }
+            if self.providers.contains(caller) { return false; }
+
+            let profile = ProviderProfile {
+                provider: caller,
+                endpoint,
+                compute_units,
+                hourly_rate,
+                registered_at: self.env().block_timestamp(),
+                is_active: true,
+                stake,
+                reputation_score: 100,
+            };
+            self.providers.insert(caller, &profile);
+            self.provider_count = self.provider_count.saturating_add(1);
+            self.env().emit_event(ProviderRegistered { provider: caller, stake, compute_units });
+            true
         }
 
-        /// Simply returns the current value of our `bool`.
+        /// Update provider's endpoint and hourly rate.
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn update_provider(&mut self, endpoint: String, hourly_rate: U256) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut profile) = self.providers.get(caller) {
+                profile.endpoint = endpoint.clone();
+                profile.hourly_rate = hourly_rate;
+                self.providers.insert(caller, &profile);
+                self.env().emit_event(ProviderUpdated { provider: caller, endpoint, hourly_rate });
+                true
+            } else { false }
+        }
+
+        /// Set provider as active or inactive.
+        #[ink(message)]
+        pub fn set_active(&mut self, is_active: bool) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut profile) = self.providers.get(caller) {
+                profile.is_active = is_active;
+                self.providers.insert(caller, &profile);
+                self.env().emit_event(ProviderActiveChanged { provider: caller, is_active });
+                true
+            } else { false }
+        }
+
+        /// Increase provider's stake (payable).
+        #[ink(message, payable)]
+        pub fn add_stake(&mut self) -> bool {
+            let caller = self.env().caller();
+            let amount = self.env().transferred_value();
+            if amount == 0.into() { return false; }
+            if let Some(mut profile) = self.providers.get(caller) {
+                profile.stake = profile.stake.saturating_add(amount);
+                self.providers.insert(caller, &profile);
+                self.env().emit_event(StakeAdded { provider: caller, amount });
+                true
+            } else { false }
+        }
+
+        /// Withdraw stake (only if provider inactive or by admin).
+        #[ink(message)]
+        pub fn withdraw_stake(&mut self, amount: U256) -> bool {
+            let caller = self.env().caller();
+            if let Some(mut profile) = self.providers.get(caller) {
+                if profile.is_active && caller != self.admin { return false; }
+                if profile.stake < amount { return false; }
+                if self.env().transfer(caller, amount).is_err() { return false; }
+                profile.stake = profile.stake.saturating_sub(amount);
+                self.providers.insert(caller, &profile);
+                self.env().emit_event(StakeWithdrawn { provider: caller, amount });
+                true
+            } else { false }
+        }
+
+        /// Admin adjusts reputation score.
+        #[ink(message)]
+        pub fn set_reputation(&mut self, provider: H160, score: u32) -> bool {
+            if self.env().caller() != self.admin { return false; }
+            if let Some(mut profile) = self.providers.get(provider) {
+                profile.reputation_score = score;
+                self.providers.insert(provider, &profile);
+                self.env().emit_event(ReputationUpdated { provider, score });
+                true
+            } else { false }
+        }
+
+        /// Get provider profile.
+        #[ink(message)]
+        pub fn get_provider(&self, provider: H160) -> Option<ProviderProfile> { self.providers.get(provider) }
+
+        /// Get admin address.
+        #[ink(message)]
+        pub fn get_admin(&self) -> H160 { self.admin }
+
+        /// Get provider count.
+        #[ink(message)]
+        pub fn get_provider_count(&self) -> u64 { self.provider_count }
+
+        /// Get min stake requirement.
+        #[ink(message)]
+        pub fn get_min_stake(&self) -> U256 { self.min_stake }
+
+        /// Admin sets min stake.
+        #[ink(message)]
+        pub fn set_min_stake(&mut self, new_min_stake: U256) -> bool {
+            if self.env().caller() != self.admin { return false; }
+            self.min_stake = new_min_stake;
+            true
         }
     }
 
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
+    #[ink(event)]
+    pub struct ProviderRegistered { #[ink(topic)] pub provider: H160, pub stake: U256, pub compute_units: u64 }
+    #[ink(event)]
+    pub struct ProviderUpdated { #[ink(topic)] pub provider: H160, pub endpoint: String, pub hourly_rate: U256 }
+    #[ink(event)]
+    pub struct ProviderActiveChanged { #[ink(topic)] pub provider: H160, pub is_active: bool }
+    #[ink(event)]
+    pub struct StakeAdded { #[ink(topic)] pub provider: H160, pub amount: U256 }
+    #[ink(event)]
+    pub struct StakeWithdrawn { #[ink(topic)] pub provider: H160, pub amount: U256 }
+    #[ink(event)]
+    pub struct ReputationUpdated { #[ink(topic)] pub provider: H160, pub score: u32 }
+
     #[cfg(test)]
-    mod tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// We test a simple use case of our contract.
-        #[ink::test]
-        fn it_works() {
-            let mut compute_provider_registry = ComputeProviderRegistry::new(false);
-            assert_eq!(compute_provider_registry.get(), false);
-            compute_provider_registry.flip();
-            assert_eq!(compute_provider_registry.get(), true);
-        }
-    }
-
-
-    /// This is how you'd write end-to-end (E2E) or integration tests for ink! contracts.
-    ///
-    /// When running these you need to make sure that you:
-    /// - Compile the tests with the `e2e-tests` feature flag enabled (`--features e2e-tests`)
-    /// - Are running a Substrate node which contains `pallet-contracts` in the background
-    #[cfg(all(test, feature = "e2e-tests"))]
-    mod e2e_tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// A helper function used for calling contract messages.
-        use ink_e2e::ContractsBackend;
-
-        /// The End-to-End test `Result` type.
-        type E2EResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
-        /// We test that we can read and write a value from the on-chain contract.
-        #[ink_e2e::test]
-        async fn it_works(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-            // Given
-            let mut constructor = ComputeProviderRegistryRef::new(false);
-            let contract = client
-                .instantiate("compute_provider_registry", &ink_e2e::bob(), &mut constructor)
-                .submit()
-                .await
-                .expect("instantiate failed");
-            let mut call_builder = contract.call_builder::<ComputeProviderRegistry>();
-
-            let get = call_builder.get();
-            let get_result = client.call(&ink_e2e::bob(), &get).dry_run().await?;
-            assert!(matches!(get_result.return_value(), false));
-
-            // When
-            let flip = call_builder.flip();
-            let _flip_result = client
-                .call(&ink_e2e::bob(), &flip)
-                .submit()
-                .await
-                .expect("flip failed");
-
-            // Then
-            let get = call_builder.get();
-            let get_result = client.call(&ink_e2e::bob(), &get).dry_run().await?;
-            assert!(matches!(get_result.return_value(), true));
-
-            Ok(())
-        }
-    }
+    mod tests {}
 }
