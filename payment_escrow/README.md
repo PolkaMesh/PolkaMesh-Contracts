@@ -12,8 +12,8 @@ Smart contract for managing escrow payments between job owners and compute provi
 ```mermaid
 graph LR
     A[new] --> B[Initialize empty escrow registry<br/>Deployer becomes admin]
-    style A fill:#e1f5ff
-    style B fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -40,12 +40,12 @@ graph TB
         D2[get_admin<br/>Get admin address]
     end
 
-    style A1 fill:#fff3cd
-    style B1 fill:#d1ecf1
-    style B2 fill:#d1ecf1
-    style C1 fill:#d4edda
-    style D1 fill:#e2e3e5
-    style D2 fill:#e2e3e5
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
+    style D2 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -100,13 +100,13 @@ graph LR
     D --> F[Emit EscrowCreated]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#fff3cd
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -127,13 +127,13 @@ graph LR
     D --> F[Emit ProviderSet]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -149,13 +149,13 @@ graph LR
     D --> F[Emit FundsReleased]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d4edda
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -178,13 +178,13 @@ graph LR
     D --> F[Emit FundsRefunded]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -202,10 +202,10 @@ graph TB
     A[get_escrow] -->|job_id: u128| A1[Returns: Option Escrow]
     B[get_admin] --> B1[Returns: H160 admin address]
 
-    style A fill:#e2e3e5
-    style B fill:#e2e3e5
-    style A1 fill:#d4edda
-    style B1 fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -221,10 +221,10 @@ graph LR
         E4[FundsRefunded<br/>job_id, owner, amount]
     end
 
-    style E1 fill:#dfe6e9
-    style E2 fill:#dfe6e9
-    style E3 fill:#dfe6e9
-    style E4 fill:#dfe6e9
+    style E1 fill:#ffffff,stroke:#000000,color:#000000
+    style E2 fill:#ffffff,stroke:#000000,color:#000000
+    style E3 fill:#ffffff,stroke:#000000,color:#000000
+    style E4 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -266,9 +266,9 @@ graph TB
         C -->|Can call| C2[get_admin]
     end
 
-    style A fill:#d1ecf1
-    style B fill:#f8d7da
-    style C fill:#e2e3e5
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -290,13 +290,13 @@ graph TB
         B4[Release before provider set ❌]
     end
 
-    style A1 fill:#d4edda
-    style A2 fill:#d4edda
-    style A3 fill:#d4edda
-    style B1 fill:#f8d7da
-    style B2 fill:#f8d7da
-    style B3 fill:#f8d7da
-    style B4 fill:#f8d7da
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style A2 fill:#ffffff,stroke:#000000,color:#000000
+    style A3 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style B3 fill:#ffffff,stroke:#000000,color:#000000
+    style B4 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---

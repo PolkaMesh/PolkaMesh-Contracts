@@ -12,8 +12,8 @@ Smart contract for minting and managing data NFTs with access control and privac
 ```mermaid
 graph LR
     A[new] --> B[Initialize empty registry<br/>Deployer becomes admin<br/>Total supply = 0]
-    style A fill:#e1f5ff
-    style B fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -45,20 +45,20 @@ graph TB
         C6[get_admin<br/>Get admin address]
     end
 
-    style A1 fill:#fff3cd
-    style A2 fill:#fff3cd
-    style B1 fill:#d1ecf1
-    style B2 fill:#d1ecf1
-    style B3 fill:#d1ecf1
-    style B4 fill:#d1ecf1
-    style B5 fill:#d1ecf1
-    style B6 fill:#d1ecf1
-    style C1 fill:#e2e3e5
-    style C2 fill:#e2e3e5
-    style C3 fill:#e2e3e5
-    style C4 fill:#e2e3e5
-    style C5 fill:#e2e3e5
-    style C6 fill:#e2e3e5
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style A2 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style B3 fill:#ffffff,stroke:#000000,color:#000000
+    style B4 fill:#ffffff,stroke:#000000,color:#000000
+    style B5 fill:#ffffff,stroke:#000000,color:#000000
+    style B6 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style C2 fill:#ffffff,stroke:#000000,color:#000000
+    style C3 fill:#ffffff,stroke:#000000,color:#000000
+    style C4 fill:#ffffff,stroke:#000000,color:#000000
+    style C5 fill:#ffffff,stroke:#000000,color:#000000
+    style C6 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -112,12 +112,12 @@ graph LR
     D --> E[Emit NFTMinted]
     E --> F[Return token_id: u128]
 
-    style A fill:#e1f5ff
-    style B fill:#fff3cd
-    style C fill:#d4edda
-    style D fill:#d4edda
-    style E fill:#dfe6e9
-    style F fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Note:** Minting is always successful. Payment is optional (for future extensions).
@@ -135,13 +135,13 @@ graph LR
     D --> F[Emit NFTTransferred]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -162,13 +162,13 @@ graph LR
     D --> F[Emit NFTApproved]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -184,13 +184,13 @@ graph LR
     D --> F[Emit AccessGranted]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#fff3cd
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -211,13 +211,13 @@ graph LR
     D --> F[Emit AccessRevoked]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -233,13 +233,13 @@ graph LR
     D --> F[Emit DataURIUpdated]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -255,13 +255,13 @@ graph LR
     D --> F[Emit AccessPriceUpdated]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -277,13 +277,13 @@ graph LR
     D --> F[Emit NFTBurned]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d1ecf1
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -299,18 +299,18 @@ graph TB
     E[total_supply] --> E1[Returns: u128 total]
     F[get_admin] --> F1[Returns: H160 admin]
 
-    style A fill:#e2e3e5
-    style B fill:#e2e3e5
-    style C fill:#e2e3e5
-    style D fill:#e2e3e5
-    style E fill:#e2e3e5
-    style F fill:#e2e3e5
-    style A1 fill:#d4edda
-    style B1 fill:#d4edda
-    style C1 fill:#d4edda
-    style D1 fill:#d4edda
-    style E1 fill:#d4edda
-    style F1 fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
+    style E1 fill:#ffffff,stroke:#000000,color:#000000
+    style F1 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -330,14 +330,14 @@ graph LR
         E8[NFTBurned<br/>token_id, owner]
     end
 
-    style E1 fill:#dfe6e9
-    style E2 fill:#dfe6e9
-    style E3 fill:#dfe6e9
-    style E4 fill:#dfe6e9
-    style E5 fill:#dfe6e9
-    style E6 fill:#dfe6e9
-    style E7 fill:#dfe6e9
-    style E8 fill:#dfe6e9
+    style E1 fill:#ffffff,stroke:#000000,color:#000000
+    style E2 fill:#ffffff,stroke:#000000,color:#000000
+    style E3 fill:#ffffff,stroke:#000000,color:#000000
+    style E4 fill:#ffffff,stroke:#000000,color:#000000
+    style E5 fill:#ffffff,stroke:#000000,color:#000000
+    style E6 fill:#ffffff,stroke:#000000,color:#000000
+    style E7 fill:#ffffff,stroke:#000000,color:#000000
+    style E8 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -383,9 +383,9 @@ graph TB
         C -->|Can call| C2[Query functions]
     end
 
-    style A fill:#d1ecf1
-    style B fill:#f8d7da
-    style C fill:#e2e3e5
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -430,10 +430,10 @@ graph LR
         D[200-255: High<br/>Confidential]
     end
 
-    style A fill:#d4edda
-    style B fill:#fff3cd
-    style C fill:#ffc107
-    style D fill:#f8d7da
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Privacy Level Usage:**
@@ -483,23 +483,23 @@ graph TB
         E3[Burned NFTs cannot be recovered]
     end
 
-    style A1 fill:#d4edda
-    style A2 fill:#d4edda
-    style A3 fill:#d4edda
-    style B1 fill:#d1ecf1
-    style B2 fill:#d1ecf1
-    style B3 fill:#d1ecf1
-    style B4 fill:#d1ecf1
-    style C1 fill:#fff3cd
-    style C2 fill:#fff3cd
-    style C3 fill:#fff3cd
-    style C4 fill:#fff3cd
-    style D1 fill:#e2e3e5
-    style D2 fill:#e2e3e5
-    style D3 fill:#e2e3e5
-    style E1 fill:#f8d7da
-    style E2 fill:#f8d7da
-    style E3 fill:#f8d7da
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style A2 fill:#ffffff,stroke:#000000,color:#000000
+    style A3 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style B3 fill:#ffffff,stroke:#000000,color:#000000
+    style B4 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style C2 fill:#ffffff,stroke:#000000,color:#000000
+    style C3 fill:#ffffff,stroke:#000000,color:#000000
+    style C4 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
+    style D2 fill:#ffffff,stroke:#000000,color:#000000
+    style D3 fill:#ffffff,stroke:#000000,color:#000000
+    style E1 fill:#ffffff,stroke:#000000,color:#000000
+    style E2 fill:#ffffff,stroke:#000000,color:#000000
+    style E3 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---

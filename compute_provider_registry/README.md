@@ -12,8 +12,8 @@ Smart contract for managing compute provider registration and profiles in the Po
 ```mermaid
 graph LR
     A[new] -->|min_stake: U256| B[Initialize registry<br/>Set minimum stake<br/>Deployer becomes admin]
-    style A fill:#e1f5ff
-    style B fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -45,17 +45,17 @@ graph TB
         D4[get_min_stake<br/>Minimum stake value]
     end
 
-    style A1 fill:#fff3cd
-    style A2 fill:#fff3cd
-    style B1 fill:#d4edda
-    style B2 fill:#d4edda
-    style B3 fill:#d4edda
-    style C1 fill:#f8d7da
-    style C2 fill:#f8d7da
-    style D1 fill:#e2e3e5
-    style D2 fill:#e2e3e5
-    style D3 fill:#e2e3e5
-    style D4 fill:#e2e3e5
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style A2 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style B3 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style C2 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
+    style D2 fill:#ffffff,stroke:#000000,color:#000000
+    style D3 fill:#ffffff,stroke:#000000,color:#000000
+    style D4 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -100,13 +100,13 @@ graph LR
     D --> F[Emit ProviderRegistered]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#fff3cd
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -127,13 +127,13 @@ graph LR
     D --> F[Emit ProviderUpdated]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d4edda
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -149,13 +149,13 @@ graph LR
     D --> F[Emit ProviderActiveChanged]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d4edda
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -171,13 +171,13 @@ graph LR
     D --> F[Emit StakeAdded]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#fff3cd
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -193,13 +193,13 @@ graph LR
     D --> F[Emit StakeWithdrawn]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#d4edda
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Requirements:**
@@ -220,13 +220,13 @@ graph LR
     D --> F[Emit ReputationUpdated]
     D --> G[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#f8d7da
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#dfe6e9
-    style G fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
+    style G fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -241,12 +241,12 @@ graph LR
     C -->|❌ No| E[Return false]
     D --> F[Return true]
 
-    style A fill:#e1f5ff
-    style B fill:#f8d7da
-    style C fill:#ffeaa7
-    style D fill:#d4edda
-    style E fill:#f8d7da
-    style F fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style E fill:#ffffff,stroke:#000000,color:#000000
+    style F fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -260,14 +260,14 @@ graph TB
     C[get_provider_count] --> C1[Returns: u64 total]
     D[get_min_stake] --> D1[Returns: U256 minimum]
 
-    style A fill:#e2e3e5
-    style B fill:#e2e3e5
-    style C fill:#e2e3e5
-    style D fill:#e2e3e5
-    style A1 fill:#d4edda
-    style B1 fill:#d4edda
-    style C1 fill:#d4edda
-    style D1 fill:#d4edda
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -285,12 +285,12 @@ graph LR
         E6[ReputationUpdated<br/>provider, score]
     end
 
-    style E1 fill:#dfe6e9
-    style E2 fill:#dfe6e9
-    style E3 fill:#dfe6e9
-    style E4 fill:#dfe6e9
-    style E5 fill:#dfe6e9
-    style E6 fill:#dfe6e9
+    style E1 fill:#ffffff,stroke:#000000,color:#000000
+    style E2 fill:#ffffff,stroke:#000000,color:#000000
+    style E3 fill:#ffffff,stroke:#000000,color:#000000
+    style E4 fill:#ffffff,stroke:#000000,color:#000000
+    style E5 fill:#ffffff,stroke:#000000,color:#000000
+    style E6 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -338,9 +338,9 @@ graph TB
         C -->|Can call| C4[get_min_stake]
     end
 
-    style A fill:#d4edda
-    style B fill:#f8d7da
-    style C fill:#e2e3e5
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -402,17 +402,17 @@ graph TB
         D2[Only admin can update min_stake]
     end
 
-    style A1 fill:#d4edda
-    style A2 fill:#d4edda
-    style A3 fill:#d4edda
-    style B1 fill:#d1ecf1
-    style B2 fill:#d1ecf1
-    style B3 fill:#d1ecf1
-    style C1 fill:#fff3cd
-    style C2 fill:#fff3cd
-    style C3 fill:#fff3cd
-    style D1 fill:#f8d7da
-    style D2 fill:#f8d7da
+    style A1 fill:#ffffff,stroke:#000000,color:#000000
+    style A2 fill:#ffffff,stroke:#000000,color:#000000
+    style A3 fill:#ffffff,stroke:#000000,color:#000000
+    style B1 fill:#ffffff,stroke:#000000,color:#000000
+    style B2 fill:#ffffff,stroke:#000000,color:#000000
+    style B3 fill:#ffffff,stroke:#000000,color:#000000
+    style C1 fill:#ffffff,stroke:#000000,color:#000000
+    style C2 fill:#ffffff,stroke:#000000,color:#000000
+    style C3 fill:#ffffff,stroke:#000000,color:#000000
+    style D1 fill:#ffffff,stroke:#000000,color:#000000
+    style D2 fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 ---
@@ -425,10 +425,10 @@ graph LR
     B -->|Good Performance| C[Score: 101-1000]
     B -->|Poor Performance| D[Score: 0-99]
 
-    style A fill:#e2e3e5
-    style B fill:#fff3cd
-    style C fill:#d4edda
-    style D fill:#f8d7da
+    style A fill:#ffffff,stroke:#000000,color:#000000
+    style B fill:#ffffff,stroke:#000000,color:#000000
+    style C fill:#ffffff,stroke:#000000,color:#000000
+    style D fill:#ffffff,stroke:#000000,color:#000000
 ```
 
 **Reputation Range:** 0 - 1000 (u32)
