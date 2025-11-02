@@ -232,5 +232,368 @@ mod data_nft_registry {
     pub struct NFTBurned { #[ink(topic)] pub token_id: u128, pub owner: H160 }
 
     #[cfg(test)]
-    mod tests {}
+    mod tests {
+        use super::*;
+        use ink::primitives::{H160, U256};
+
+        fn alice() -> H160 { H160::from([1; 20]) }
+        fn bob() -> H160 { H160::from([2; 20]) }
+        fn charlie() -> H160 { H160::from([3; 20]) }
+
+        fn set_caller(account: H160) {
+            ink::env::test::set_caller(account);
+        }
+
+        fn set_value(amount: u128) {
+            ink::env::test::set_value_transferred(U256::from(amount));
+        }
+
+        #[ink::test]
+        fn new_works() {
+            set_caller(alice());
+            let registry = DataNftRegistry::new();
+            assert_eq!(registry.total_supply(), 0);
+            assert_eq!(registry.get_admin(), alice());
+        }
+
+        #[ink::test]
+        fn mint_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint(
+                "ipfs://example".to_string(),
+                1, // privacy_level
+                U256::from(100),
+                true // is_transferable
+            );
+            
+            assert_eq!(token_id, 1);
+            assert_eq!(registry.total_supply(), 1);
+            assert_eq!(registry.balance_of(alice()), 1);
+            
+            let nft = registry.get_nft(1).unwrap();
+            assert_eq!(nft.owner, alice());
+            assert_eq!(nft.data_uri, "ipfs://example");
+            assert_eq!(nft.privacy_level, 1);
+            assert_eq!(nft.access_price, U256::from(100));
+            assert_eq!(nft.is_transferable, true);
+        }
+
+        #[ink::test]
+        fn mint_multiple_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id1 = registry.mint("uri1".to_string(), 0, U256::from(50), true);
+            let token_id2 = registry.mint("uri2".to_string(), 2, U256::from(200), false);
+            
+            assert_eq!(token_id1, 1);
+            assert_eq!(token_id2, 2);
+            assert_eq!(registry.total_supply(), 2);
+            assert_eq!(registry.balance_of(alice()), 2);
+            
+            let nft1 = registry.get_nft(1).unwrap();
+            let nft2 = registry.get_nft(2).unwrap();
+            assert_eq!(nft1.is_transferable, true);
+            assert_eq!(nft2.is_transferable, false);
+        }
+
+        #[ink::test]
+        fn transfer_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            assert!(registry.transfer(token_id, bob()));
+            
+            assert_eq!(registry.balance_of(alice()), 0);
+            assert_eq!(registry.balance_of(bob()), 1);
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.owner, bob());
+        }
+
+        #[ink::test]
+        fn transfer_non_transferable_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), false);
+            assert!(!registry.transfer(token_id, bob()));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.owner, alice());
+        }
+
+        #[ink::test]
+        fn transfer_not_owner_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            
+            set_caller(bob());
+            assert!(!registry.transfer(token_id, charlie()));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.owner, alice());
+        }
+
+        #[ink::test]
+        fn transfer_nonexistent_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            assert!(!registry.transfer(999, bob()));
+        }
+
+        #[ink::test]
+        fn approve_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            assert!(registry.approve(token_id, bob()));
+            
+            assert_eq!(registry.get_approved(token_id), Some(bob()));
+        }
+
+        #[ink::test]
+        fn approve_not_owner_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            
+            set_caller(bob());
+            assert!(!registry.approve(token_id, charlie()));
+            
+            assert_eq!(registry.get_approved(token_id), None);
+        }
+
+        #[ink::test]
+        fn approve_nonexistent_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            assert!(!registry.approve(999, bob()));
+        }
+
+        #[ink::test]
+        fn grant_access_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let access_price = U256::from(100);
+            let token_id = registry.mint("uri".to_string(), 1, access_price, true);
+            
+            set_value(100);
+            assert!(registry.grant_access(token_id, bob()));
+            assert!(registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn grant_access_insufficient_payment_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let access_price = U256::from(100);
+            let token_id = registry.mint("uri".to_string(), 1, access_price, true);
+            
+            set_value(50); // Insufficient payment
+            assert!(!registry.grant_access(token_id, bob()));
+            assert!(!registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn grant_access_not_owner_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let access_price = U256::from(100);
+            let token_id = registry.mint("uri".to_string(), 1, access_price, true);
+            
+            set_caller(bob());
+            set_value(100);
+            assert!(!registry.grant_access(token_id, charlie()));
+            assert!(!registry.has_access(token_id, charlie()));
+        }
+
+        #[ink::test]
+        fn revoke_access_by_owner_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 1, U256::from(100), true);
+            
+            set_value(100);
+            assert!(registry.grant_access(token_id, bob()));
+            assert!(registry.has_access(token_id, bob()));
+            
+            assert!(registry.revoke_access(token_id, bob()));
+            assert!(!registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn revoke_access_by_admin_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice()); // Alice is admin
+            
+            let token_id = registry.mint("uri".to_string(), 1, U256::from(100), true);
+            
+            set_value(100);
+            assert!(registry.grant_access(token_id, bob()));
+            assert!(registry.has_access(token_id, bob()));
+            
+            // Admin can revoke access even if not owner
+            set_caller(alice());
+            assert!(registry.revoke_access(token_id, bob()));
+            assert!(!registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn revoke_access_unauthorized_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 1, U256::from(100), true);
+            
+            set_value(100);
+            assert!(registry.grant_access(token_id, bob()));
+            
+            set_caller(charlie()); // Not owner or admin
+            assert!(!registry.revoke_access(token_id, bob()));
+            assert!(registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn update_data_uri_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("old_uri".to_string(), 0, U256::from(100), true);
+            assert!(registry.update_data_uri(token_id, "new_uri".to_string()));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.data_uri, "new_uri");
+        }
+
+        #[ink::test]
+        fn update_data_uri_not_owner_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            
+            set_caller(bob());
+            assert!(!registry.update_data_uri(token_id, "new_uri".to_string()));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.data_uri, "uri");
+        }
+
+        #[ink::test]
+        fn update_access_price_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            assert!(registry.update_access_price(token_id, U256::from(200)));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.access_price, U256::from(200));
+        }
+
+        #[ink::test]
+        fn update_access_price_not_owner_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            
+            set_caller(bob());
+            assert!(!registry.update_access_price(token_id, U256::from(200)));
+            
+            let nft = registry.get_nft(token_id).unwrap();
+            assert_eq!(nft.access_price, U256::from(100));
+        }
+
+        #[ink::test]
+        fn burn_by_owner_works() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            assert_eq!(registry.balance_of(alice()), 1);
+            
+            assert!(registry.burn(token_id));
+            assert_eq!(registry.balance_of(alice()), 0);
+            assert!(registry.get_nft(token_id).is_none());
+        }
+
+        #[ink::test]
+        fn burn_by_admin_works() {
+            set_caller(alice()); // Alice is admin
+            let mut registry = DataNftRegistry::new();
+            
+            set_caller(bob());
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            assert_eq!(registry.balance_of(bob()), 1);
+            
+            set_caller(alice()); // Admin burns
+            assert!(registry.burn(token_id));
+            assert_eq!(registry.balance_of(bob()), 0);
+            assert!(registry.get_nft(token_id).is_none());
+        }
+
+        #[ink::test]
+        fn burn_unauthorized_fails() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 0, U256::from(100), true);
+            
+            set_caller(bob());
+            assert!(!registry.burn(token_id));
+            assert_eq!(registry.balance_of(alice()), 1);
+            assert!(registry.get_nft(token_id).is_some());
+        }
+
+        #[ink::test]
+        fn has_access_owner_always_true() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 1, U256::from(100), true);
+            assert!(registry.has_access(token_id, alice()));
+        }
+
+        #[ink::test]
+        fn has_access_non_owner_without_grant_false() {
+            let mut registry = DataNftRegistry::new();
+            set_caller(alice());
+            
+            let token_id = registry.mint("uri".to_string(), 1, U256::from(100), true);
+            assert!(!registry.has_access(token_id, bob()));
+        }
+
+        #[ink::test]
+        fn balance_of_empty_account() {
+            let registry = DataNftRegistry::new();
+            assert_eq!(registry.balance_of(alice()), 0);
+        }
+
+        #[ink::test]
+        fn get_nft_nonexistent() {
+            let registry = DataNftRegistry::new();
+            assert!(registry.get_nft(999).is_none());
+        }
+
+        #[ink::test]
+        fn get_approved_nonexistent() {
+            let registry = DataNftRegistry::new();
+            assert!(registry.get_approved(999).is_none());
+        }
+    }
 }
