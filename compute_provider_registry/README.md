@@ -5,6 +5,18 @@ Smart contract for managing compute provider registration and profiles in the Po
 **Status:** ✅ Builds and compiles  
 **Environment:** EVM-like primitives (H160 addresses, U256 balances)
 
+## 🧪 Tests
+
+- Unit tests: 22 passing (contract test suite validated locally)
+
+How to run the tests locally:
+
+```bash
+# from the repository root
+cd PolkaMesh-Contracts/compute_provider_registry
+cargo test
+```
+
 ---
 
 ## 🏗️ Constructor

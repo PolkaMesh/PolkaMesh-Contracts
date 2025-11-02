@@ -5,6 +5,18 @@ Smart contract for managing AI compute job submissions and lifecycle tracking in
 **Status:** ✅ Builds and compiles  
 **Environment:** EVM-like primitives (H160 addresses, U256 balances)
 
+## 🧪 Tests
+
+- Unit tests: 24 passing (contract test suite validated locally)
+
+How to run the tests locally:
+
+```bash
+# from the repository root
+cd PolkaMesh-Contracts/ai_job_queue
+cargo test
+```
+
 ---
 
 ## 🏗️ Constructor

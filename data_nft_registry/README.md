@@ -5,6 +5,18 @@ Smart contract for minting and managing data NFTs with access control and privac
 **Status:** ✅ Builds and compiles  
 **Environment:** EVM-like primitives (H160 addresses, U256 balances)
 
+## 🧪 Tests
+
+- Unit tests: 28 passing (contract test suite validated locally)
+
+How to run the tests locally:
+
+```bash
+# from the repository root
+cd PolkaMesh-Contracts/data_nft_registry
+cargo test
+```
+
 ---
 
 ## 🏗️ Constructor

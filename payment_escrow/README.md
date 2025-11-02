@@ -5,6 +5,18 @@ Smart contract for managing escrow payments between job owners and compute provi
 **Status:** ✅ Builds and compiles  
 **Environment:** EVM-like primitives (H160 addresses, U256 balances)
 
+## 🧪 Tests
+
+- Unit tests: 23 passing (contract test suite validated locally)
+
+How to run the tests locally:
+
+```bash
+# from the repository root
+cd PolkaMesh-Contracts/payment_escrow
+cargo test
+```
+
 ---
 
 ## 🏗️ Constructor
