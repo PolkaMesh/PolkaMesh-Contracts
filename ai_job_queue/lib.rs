@@ -4,7 +4,6 @@
 mod ai_job_queue {
     use ink::prelude::string::String;
     use ink::storage::Mapping;
-    use ink::primitives::{H160, U256};
 
     #[derive(
         ink::scale::Encode,
@@ -42,12 +41,12 @@ mod ai_job_queue {
     )]
     pub struct Job {
         pub id: u128,
-        pub owner: H160,
+        pub owner: AccountId,
         pub model_ref: String,
         pub data_ref: String,
-        pub budget: U256,
+        pub budget: Balance,
         pub status: JobStatus,
-        pub assigned_provider: Option<H160>,
+        pub assigned_provider: Option<AccountId>,
         pub deadline: u32,
         pub privacy_required: bool,
     }
@@ -56,20 +55,20 @@ mod ai_job_queue {
     pub struct AiJobQueue {
         jobs: Mapping<u128, Job>,
         job_counter: u128,
-        min_budget: U256,
-        owner: H160,
+        min_budget: Balance,
+        owner: AccountId,
     }
 
     impl AiJobQueue {
         #[ink(constructor)]
-        pub fn new(min_budget: U256) -> Self {
-            Self { jobs: Mapping::default(), job_counter: 0, min_budget, owner: Self::env().caller() }
+        pub fn new(min_budget: Balance) -> Self {
+            Self { jobs: Mapping::default(), job_counter: 0, min_budget, owner: Self::env().caller().into() }
         }
 
         #[ink(message, payable)]
         pub fn submit_job(&mut self, model_ref: String, data_ref: String, deadline: u32, privacy_required: bool) -> u128 {
-            let caller: H160 = self.env().caller();
-            let payment: U256 = self.env().transferred_value();
+            let caller: AccountId = self.env().caller().into();
+            let payment: Balance = self.env().transferred_value();
             assert!(payment >= self.min_budget, "Insufficient payment");
             assert!(deadline > self.env().block_number(), "Invalid deadline");
             self.job_counter = self.job_counter.saturating_add(1);
@@ -84,8 +83,8 @@ mod ai_job_queue {
         pub fn get_job(&self, job_id: u128) -> Option<Job> { self.jobs.get(job_id) }
 
         #[ink(message)]
-        pub fn assign_provider(&mut self, job_id: u128, provider: H160) -> bool {
-            let caller: H160 = self.env().caller();
+        pub fn assign_provider(&mut self, job_id: u128, provider: AccountId) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if caller != job.owner || job.status != JobStatus::Registered { return false; }
                 job.assigned_provider = Some(provider);
@@ -98,7 +97,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn mark_in_progress(&mut self, job_id: u128) -> bool {
-            let caller: H160 = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if job.assigned_provider != Some(caller) || job.status != JobStatus::Assigned { return false; }
                 job.status = JobStatus::InProgress;
@@ -110,7 +109,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn mark_completed(&mut self, job_id: u128, result_hash: String) -> bool {
-            let caller: H160 = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if job.assigned_provider != Some(caller) || job.status != JobStatus::InProgress { return false; }
                 job.status = JobStatus::Completed;
@@ -122,7 +121,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn cancel_job(&mut self, job_id: u128) -> bool {
-            let caller: H160 = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if caller != job.owner || job.status == JobStatus::Completed { return false; }
                 job.status = JobStatus::Cancelled;
@@ -135,40 +134,39 @@ mod ai_job_queue {
         #[ink(message)]
         pub fn get_job_counter(&self) -> u128 { self.job_counter }
         #[ink(message)]
-        pub fn get_min_budget(&self) -> U256 { self.min_budget }
+        pub fn get_min_budget(&self) -> Balance { self.min_budget }
         #[ink(message)]
-        pub fn set_min_budget(&mut self, new_min_budget: U256) -> bool {
-            if self.env().caller() != self.owner { return false; }
+        pub fn set_min_budget(&mut self, new_min_budget: Balance) -> bool {
+            if self.env().caller().into() != self.owner { return false; }
             self.min_budget = new_min_budget; true
         }
     }
 
     #[ink(event)]
-    pub struct JobSubmitted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: H160, pub budget: U256 }
+    pub struct JobSubmitted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: AccountId, pub budget: Balance }
     #[ink(event)]
-    pub struct JobAssigned { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160 }
+    pub struct JobAssigned { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: AccountId }
     #[ink(event)]
     pub struct JobStatusChanged { #[ink(topic)] pub job_id: u128, pub new_status: JobStatus }
     #[ink(event)]
-    pub struct JobCompleted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160, pub result_hash: String }
+    pub struct JobCompleted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: AccountId, pub result_hash: String }
     #[ink(event)]
     pub struct JobCancelled { #[ink(topic)] pub job_id: u128 }
 
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ink::primitives::{H160, U256};
 
-        fn alice() -> H160 { H160::from([1u8; 20]) }
-        fn bob() -> H160 { H160::from([2u8; 20]) }
-        fn charlie() -> H160 { H160::from([3u8; 20]) }
+        fn alice() -> AccountId { AccountId::from([1u8; 32]) }
+        fn bob() -> AccountId { AccountId::from([2u8; 32]) }
+        fn charlie() -> AccountId { AccountId::from([3u8; 32]) }
 
-        fn set_caller(account: H160) {
-            ink::env::test::set_caller(account);
+        fn set_caller(account: AccountId) {
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
         }
 
         fn set_value(amount: u128) {
-            ink::env::test::set_value_transferred(U256::from(amount));
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(amount);
         }
 
         fn set_block_number(block: u32) {
@@ -176,10 +174,10 @@ mod ai_job_queue {
         }
 
         #[ink::test]
-        fn new_works() { 
-            let contract = AiJobQueue::new(U256::from(1000u128)); 
-            assert_eq!(contract.get_min_budget(), U256::from(1000u128)); 
-            assert_eq!(contract.get_job_counter(), 0); 
+        fn new_works() {
+            let contract = AiJobQueue::new(1000u128);
+            assert_eq!(contract.get_min_budget(), 1000u128);
+            assert_eq!(contract.get_job_counter(), 0);
         }
 
         #[ink::test]
@@ -188,8 +186,8 @@ mod ai_job_queue {
             set_block_number(100);
             set_block_number(100);
             set_value(1500);
-            
-            let mut contract = AiJobQueue::new(U256::from(1000));
+
+            let mut contract = AiJobQueue::new(1000u128);
             let job_id = contract.submit_job("model_uri".into(), "dataset_uri".into(), 500, true);
             
             assert_eq!(job_id, 1);
