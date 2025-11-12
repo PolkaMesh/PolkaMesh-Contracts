@@ -4,7 +4,6 @@
 mod compute_provider_registry {
     use ink::prelude::string::String;
     use ink::storage::Mapping;
-    use ink::primitives::{H160, U256};
 
     #[derive(
         ink::scale::Encode,
@@ -19,43 +18,43 @@ mod compute_provider_registry {
         derive(ink::scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub struct ProviderProfile {
-        pub provider: H160,
+        pub provider: AccountId,
         pub endpoint: String,
         pub compute_units: u64,
-        pub hourly_rate: U256,
+        pub hourly_rate: Balance,
         pub registered_at: u64,
         pub is_active: bool,
-        pub stake: U256,
+        pub stake: Balance,
         pub reputation_score: u32,
     }
 
     #[ink(storage)]
     pub struct ComputeProviderRegistry {
         /// provider address -> profile
-        providers: Mapping<H160, ProviderProfile>,
+        providers: Mapping<AccountId, ProviderProfile>,
         /// optional stake requirement for registration
-        min_stake: U256,
+        min_stake: Balance,
         /// admin for future controls
-        admin: H160,
+        admin: AccountId,
         /// provider count for enumeration or stats
         provider_count: u64,
     }
 
     impl ComputeProviderRegistry {
         #[ink(constructor)]
-        pub fn new(min_stake: U256) -> Self {
+        pub fn new(min_stake: Balance) -> Self {
             Self {
                 providers: Mapping::default(),
                 min_stake,
-                admin: Self::env().caller(),
+                admin: Self::env().caller().into(),
                 provider_count: 0,
             }
         }
 
         /// Register as a compute provider. Requires attached stake >= min_stake.
         #[ink(message, payable)]
-        pub fn register_provider(&mut self, endpoint: String, compute_units: u64, hourly_rate: U256) -> bool {
-            let caller = self.env().caller();
+        pub fn register_provider(&mut self, endpoint: String, compute_units: u64, hourly_rate: Balance) -> bool {
+            let caller: AccountId = self.env().caller().into();
             let stake = self.env().transferred_value();
             if stake < self.min_stake { return false; }
             if self.providers.contains(caller) { return false; }
@@ -78,8 +77,8 @@ mod compute_provider_registry {
 
         /// Update provider's endpoint and hourly rate.
         #[ink(message)]
-        pub fn update_provider(&mut self, endpoint: String, hourly_rate: U256) -> bool {
-            let caller = self.env().caller();
+        pub fn update_provider(&mut self, endpoint: String, hourly_rate: Balance) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut profile) = self.providers.get(caller) {
                 profile.endpoint = endpoint.clone();
                 profile.hourly_rate = hourly_rate;
@@ -92,7 +91,7 @@ mod compute_provider_registry {
         /// Set provider as active or inactive.
         #[ink(message)]
         pub fn set_active(&mut self, is_active: bool) -> bool {
-            let caller = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut profile) = self.providers.get(caller) {
                 profile.is_active = is_active;
                 self.providers.insert(caller, &profile);
@@ -104,9 +103,9 @@ mod compute_provider_registry {
         /// Increase provider's stake (payable).
         #[ink(message, payable)]
         pub fn add_stake(&mut self) -> bool {
-            let caller = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             let amount = self.env().transferred_value();
-            if amount == 0.into() { return false; }
+            if amount == 0 { return false; }
             if let Some(mut profile) = self.providers.get(caller) {
                 profile.stake = profile.stake.saturating_add(amount);
                 self.providers.insert(caller, &profile);
@@ -117,8 +116,8 @@ mod compute_provider_registry {
 
         /// Withdraw stake (only if provider inactive or by admin).
         #[ink(message)]
-        pub fn withdraw_stake(&mut self, amount: U256) -> bool {
-            let caller = self.env().caller();
+        pub fn withdraw_stake(&mut self, amount: Balance) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut profile) = self.providers.get(caller) {
                 if profile.is_active && caller != self.admin { return false; }
                 if profile.stake < amount { return false; }
@@ -132,8 +131,8 @@ mod compute_provider_registry {
 
         /// Admin adjusts reputation score.
         #[ink(message)]
-        pub fn set_reputation(&mut self, provider: H160, score: u32) -> bool {
-            if self.env().caller() != self.admin { return false; }
+        pub fn set_reputation(&mut self, provider: AccountId, score: u32) -> bool {
+            if self.env().caller().into() != self.admin { return false; }
             if let Some(mut profile) = self.providers.get(provider) {
                 profile.reputation_score = score;
                 self.providers.insert(provider, &profile);
@@ -144,11 +143,11 @@ mod compute_provider_registry {
 
         /// Get provider profile.
         #[ink(message)]
-        pub fn get_provider(&self, provider: H160) -> Option<ProviderProfile> { self.providers.get(provider) }
+        pub fn get_provider(&self, provider: AccountId) -> Option<ProviderProfile> { self.providers.get(provider) }
 
         /// Get admin address.
         #[ink(message)]
-        pub fn get_admin(&self) -> H160 { self.admin }
+        pub fn get_admin(&self) -> AccountId { self.admin }
 
         /// Get provider count.
         #[ink(message)]
@@ -156,45 +155,44 @@ mod compute_provider_registry {
 
         /// Get min stake requirement.
         #[ink(message)]
-        pub fn get_min_stake(&self) -> U256 { self.min_stake }
+        pub fn get_min_stake(&self) -> Balance { self.min_stake }
 
         /// Admin sets min stake.
         #[ink(message)]
-        pub fn set_min_stake(&mut self, new_min_stake: U256) -> bool {
-            if self.env().caller() != self.admin { return false; }
+        pub fn set_min_stake(&mut self, new_min_stake: Balance) -> bool {
+            if self.env().caller().into() != self.admin { return false; }
             self.min_stake = new_min_stake;
             true
         }
     }
 
     #[ink(event)]
-    pub struct ProviderRegistered { #[ink(topic)] pub provider: H160, pub stake: U256, pub compute_units: u64 }
+    pub struct ProviderRegistered { #[ink(topic)] pub provider: AccountId, pub stake: Balance, pub compute_units: u64 }
     #[ink(event)]
-    pub struct ProviderUpdated { #[ink(topic)] pub provider: H160, pub endpoint: String, pub hourly_rate: U256 }
+    pub struct ProviderUpdated { #[ink(topic)] pub provider: AccountId, pub endpoint: String, pub hourly_rate: Balance }
     #[ink(event)]
-    pub struct ProviderActiveChanged { #[ink(topic)] pub provider: H160, pub is_active: bool }
+    pub struct ProviderActiveChanged { #[ink(topic)] pub provider: AccountId, pub is_active: bool }
     #[ink(event)]
-    pub struct StakeAdded { #[ink(topic)] pub provider: H160, pub amount: U256 }
+    pub struct StakeAdded { #[ink(topic)] pub provider: AccountId, pub amount: Balance }
     #[ink(event)]
-    pub struct StakeWithdrawn { #[ink(topic)] pub provider: H160, pub amount: U256 }
+    pub struct StakeWithdrawn { #[ink(topic)] pub provider: AccountId, pub amount: Balance }
     #[ink(event)]
-    pub struct ReputationUpdated { #[ink(topic)] pub provider: H160, pub score: u32 }
+    pub struct ReputationUpdated { #[ink(topic)] pub provider: AccountId, pub score: u32 }
 
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ink::primitives::{H160, U256};
 
-        fn alice() -> H160 { H160::from([1; 20]) }
-        fn bob() -> H160 { H160::from([2; 20]) }
-        fn charlie() -> H160 { H160::from([3; 20]) }
+        fn alice() -> AccountId { AccountId::from([1u8; 32]) }
+        fn bob() -> AccountId { AccountId::from([2u8; 32]) }
+        fn charlie() -> AccountId { AccountId::from([3u8; 32]) }
 
-        fn set_caller(account: H160) {
-            ink::env::test::set_caller(account);
+        fn set_caller(account: AccountId) {
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
         }
 
         fn set_value(amount: u128) {
-            ink::env::test::set_value_transferred(U256::from(amount));
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(amount);
         }
 
         #[ink::test]
