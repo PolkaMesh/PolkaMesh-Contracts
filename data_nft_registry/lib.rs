@@ -4,7 +4,6 @@
 mod data_nft_registry {
     use ink::prelude::string::String;
     use ink::storage::Mapping;
-    use ink::primitives::{H160, U256};
 
     #[derive(
         ink::scale::Encode,
@@ -20,11 +19,11 @@ mod data_nft_registry {
     )]
     pub struct DataNFT {
         pub token_id: u128,
-        pub owner: H160,
+        pub owner: AccountId,
         pub data_uri: String,
         pub privacy_level: u8,
         pub minted_at: u64,
-        pub access_price: U256,
+        pub access_price: Balance,
         pub is_transferable: bool,
     }
 
@@ -33,15 +32,15 @@ mod data_nft_registry {
         /// token_id -> DataNFT
         nfts: Mapping<u128, DataNFT>,
         /// owner -> list of token_ids (simplified: count only)
-        owner_nft_count: Mapping<H160, u128>,
+        owner_nft_count: Mapping<AccountId, u128>,
         /// token_id -> approved address
-        approvals: Mapping<u128, H160>,
+        approvals: Mapping<u128, AccountId>,
         /// token_id -> granted access addresses
-        granted_access: Mapping<(u128, H160), bool>,
+        granted_access: Mapping<(u128, AccountId), bool>,
         /// total minted count
         total_supply: u128,
         /// admin for controls
-        admin: H160,
+        admin: AccountId,
     }
 
     impl DataNftRegistry {
@@ -53,16 +52,16 @@ mod data_nft_registry {
                 approvals: Mapping::default(),
                 granted_access: Mapping::default(),
                 total_supply: 0,
-                admin: Self::env().caller(),
+                admin: Self::env().caller().into(),
             }
         }
 
         /// Mint a new data NFT with metadata and privacy settings.
         #[ink(message, payable)]
-        pub fn mint(&mut self, data_uri: String, privacy_level: u8, access_price: U256, is_transferable: bool) -> u128 {
-            let caller = self.env().caller();
+        pub fn mint(&mut self, data_uri: String, privacy_level: u8, access_price: Balance, is_transferable: bool) -> u128 {
+            let caller: AccountId = self.env().caller().into();
             let token_id = self.total_supply.saturating_add(1);
-            
+
             let nft = DataNFT {
                 token_id,
                 owner: caller,
@@ -84,8 +83,8 @@ mod data_nft_registry {
 
         /// Transfer NFT to a new owner (only if is_transferable).
         #[ink(message)]
-        pub fn transfer(&mut self, token_id: u128, to: H160) -> bool {
-            let caller = self.env().caller();
+        pub fn transfer(&mut self, token_id: u128, to: AccountId) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut nft) = self.nfts.get(token_id) {
                 if nft.owner != caller { return false; }
                 if !nft.is_transferable { return false; }
@@ -107,8 +106,8 @@ mod data_nft_registry {
 
         /// Approve another address to transfer the NFT.
         #[ink(message)]
-        pub fn approve(&mut self, token_id: u128, approved: H160) -> bool {
-            let caller = self.env().caller();
+        pub fn approve(&mut self, token_id: u128, approved: AccountId) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(nft) = self.nfts.get(token_id) {
                 if nft.owner != caller { return false; }
                 self.approvals.insert(token_id, &approved);
@@ -119,8 +118,8 @@ mod data_nft_registry {
 
         /// Grant access to an NFT for a specific address.
         #[ink(message, payable)]
-        pub fn grant_access(&mut self, token_id: u128, grantee: H160) -> bool {
-            let caller = self.env().caller();
+        pub fn grant_access(&mut self, token_id: u128, grantee: AccountId) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(nft) = self.nfts.get(token_id) {
                 if nft.owner != caller { return false; }
                 let payment = self.env().transferred_value();
@@ -134,8 +133,8 @@ mod data_nft_registry {
 
         /// Revoke access from an address.
         #[ink(message)]
-        pub fn revoke_access(&mut self, token_id: u128, grantee: H160) -> bool {
-            let caller = self.env().caller();
+        pub fn revoke_access(&mut self, token_id: u128, grantee: AccountId) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(nft) = self.nfts.get(token_id) {
                 if nft.owner != caller && caller != self.admin { return false; }
                 self.granted_access.remove((token_id, grantee));
@@ -147,7 +146,7 @@ mod data_nft_registry {
         /// Update data URI (owner-only).
         #[ink(message)]
         pub fn update_data_uri(&mut self, token_id: u128, new_uri: String) -> bool {
-            let caller = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut nft) = self.nfts.get(token_id) {
                 if nft.owner != caller { return false; }
                 nft.data_uri = new_uri.clone();
@@ -159,8 +158,8 @@ mod data_nft_registry {
 
         /// Update access price (owner-only).
         #[ink(message)]
-        pub fn update_access_price(&mut self, token_id: u128, new_price: U256) -> bool {
-            let caller = self.env().caller();
+        pub fn update_access_price(&mut self, token_id: u128, new_price: Balance) -> bool {
+            let caller: AccountId = self.env().caller().into();
             if let Some(mut nft) = self.nfts.get(token_id) {
                 if nft.owner != caller { return false; }
                 nft.access_price = new_price;
@@ -173,7 +172,7 @@ mod data_nft_registry {
         /// Burn NFT (destroy it).
         #[ink(message)]
         pub fn burn(&mut self, token_id: u128) -> bool {
-            let caller = self.env().caller();
+            let caller: AccountId = self.env().caller().into();
             if let Some(nft) = self.nfts.get(token_id) {
                 if nft.owner != caller && caller != self.admin { return false; }
                 self.nfts.remove(token_id);
@@ -190,15 +189,15 @@ mod data_nft_registry {
 
         /// Get NFT count for an owner.
         #[ink(message)]
-        pub fn balance_of(&self, owner: H160) -> u128 { self.owner_nft_count.get(owner).unwrap_or(0) }
+        pub fn balance_of(&self, owner: AccountId) -> u128 { self.owner_nft_count.get(owner).unwrap_or(0) }
 
         /// Get approved address for a token.
         #[ink(message)]
-        pub fn get_approved(&self, token_id: u128) -> Option<H160> { self.approvals.get(token_id) }
+        pub fn get_approved(&self, token_id: u128) -> Option<AccountId> { self.approvals.get(token_id) }
 
         /// Check if address has access to a token.
         #[ink(message)]
-        pub fn has_access(&self, token_id: u128, account: H160) -> bool {
+        pub fn has_access(&self, token_id: u128, account: AccountId) -> bool {
             if let Some(nft) = self.nfts.get(token_id) {
                 if nft.owner == account { return true; }
             }
@@ -211,41 +210,40 @@ mod data_nft_registry {
 
         /// Get admin address.
         #[ink(message)]
-        pub fn get_admin(&self) -> H160 { self.admin }
+        pub fn get_admin(&self) -> AccountId { self.admin }
     }
 
     #[ink(event)]
-    pub struct NFTMinted { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub owner: H160, pub data_uri: String, pub privacy_level: u8 }
+    pub struct NFTMinted { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub owner: AccountId, pub data_uri: String, pub privacy_level: u8 }
     #[ink(event)]
-    pub struct NFTTransferred { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub from: H160, #[ink(topic)] pub to: H160 }
+    pub struct NFTTransferred { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub from: AccountId, #[ink(topic)] pub to: AccountId }
     #[ink(event)]
-    pub struct NFTApproved { #[ink(topic)] pub token_id: u128, pub owner: H160, pub approved: H160 }
+    pub struct NFTApproved { #[ink(topic)] pub token_id: u128, pub owner: AccountId, pub approved: AccountId }
     #[ink(event)]
-    pub struct AccessGranted { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub grantee: H160, pub payment: U256 }
+    pub struct AccessGranted { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub grantee: AccountId, pub payment: Balance }
     #[ink(event)]
-    pub struct AccessRevoked { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub grantee: H160 }
+    pub struct AccessRevoked { #[ink(topic)] pub token_id: u128, #[ink(topic)] pub grantee: AccountId }
     #[ink(event)]
     pub struct DataURIUpdated { #[ink(topic)] pub token_id: u128, pub new_uri: String }
     #[ink(event)]
-    pub struct AccessPriceUpdated { #[ink(topic)] pub token_id: u128, pub new_price: U256 }
+    pub struct AccessPriceUpdated { #[ink(topic)] pub token_id: u128, pub new_price: Balance }
     #[ink(event)]
-    pub struct NFTBurned { #[ink(topic)] pub token_id: u128, pub owner: H160 }
+    pub struct NFTBurned { #[ink(topic)] pub token_id: u128, pub owner: AccountId }
 
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ink::primitives::{H160, U256};
 
-        fn alice() -> H160 { H160::from([1; 20]) }
-        fn bob() -> H160 { H160::from([2; 20]) }
-        fn charlie() -> H160 { H160::from([3; 20]) }
+        fn alice() -> AccountId { AccountId::from([1u8; 32]) }
+        fn bob() -> AccountId { AccountId::from([2u8; 32]) }
+        fn charlie() -> AccountId { AccountId::from([3u8; 32]) }
 
-        fn set_caller(account: H160) {
-            ink::env::test::set_caller(account);
+        fn set_caller(account: AccountId) {
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
         }
 
         fn set_value(amount: u128) {
-            ink::env::test::set_value_transferred(U256::from(amount));
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(amount);
         }
 
         #[ink::test]
@@ -260,23 +258,23 @@ mod data_nft_registry {
         fn mint_works() {
             let mut registry = DataNftRegistry::new();
             set_caller(alice());
-            
+
             let token_id = registry.mint(
                 "ipfs://example".to_string(),
                 1, // privacy_level
-                U256::from(100),
+                100u128,
                 true // is_transferable
             );
-            
+
             assert_eq!(token_id, 1);
             assert_eq!(registry.total_supply(), 1);
             assert_eq!(registry.balance_of(alice()), 1);
-            
+
             let nft = registry.get_nft(1).unwrap();
             assert_eq!(nft.owner, alice());
             assert_eq!(nft.data_uri, "ipfs://example");
             assert_eq!(nft.privacy_level, 1);
-            assert_eq!(nft.access_price, U256::from(100));
+            assert_eq!(nft.access_price, 100u128);
             assert_eq!(nft.is_transferable, true);
         }
 
@@ -284,9 +282,9 @@ mod data_nft_registry {
         fn mint_multiple_works() {
             let mut registry = DataNftRegistry::new();
             set_caller(alice());
-            
-            let token_id1 = registry.mint("uri1".to_string(), 0, U256::from(50), true);
-            let token_id2 = registry.mint("uri2".to_string(), 2, U256::from(200), false);
+
+            let token_id1 = registry.mint("uri1".to_string(), 0, 50u128, true);
+            let token_id2 = registry.mint("uri2".to_string(), 2, 200u128, false);
             
             assert_eq!(token_id1, 1);
             assert_eq!(token_id2, 2);
