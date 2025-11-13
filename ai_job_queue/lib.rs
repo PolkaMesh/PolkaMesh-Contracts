@@ -4,6 +4,7 @@
 mod ai_job_queue {
     use ink::prelude::string::String;
     use ink::storage::Mapping;
+    use ink::primitives::H160;
 
     #[derive(
         ink::scale::Encode,
@@ -41,12 +42,12 @@ mod ai_job_queue {
     )]
     pub struct Job {
         pub id: u128,
-        pub owner: AccountId,
+        pub owner: H160,
         pub model_ref: String,
         pub data_ref: String,
-        pub budget: Balance,
+        pub budget: u128,
         pub status: JobStatus,
-        pub assigned_provider: Option<AccountId>,
+        pub assigned_provider: Option<H160>,
         pub deadline: u32,
         pub privacy_required: bool,
     }
@@ -55,20 +56,22 @@ mod ai_job_queue {
     pub struct AiJobQueue {
         jobs: Mapping<u128, Job>,
         job_counter: u128,
-        min_budget: Balance,
-        owner: AccountId,
+        min_budget: u128,
+        owner: H160,
     }
 
     impl AiJobQueue {
         #[ink(constructor)]
-        pub fn new(min_budget: Balance) -> Self {
-            Self { jobs: Mapping::default(), job_counter: 0, min_budget, owner: Self::env().caller().into() }
+        pub fn new(min_budget: u128) -> Self {
+            let caller = Self::env().caller();
+            let caller_h160: H160 = caller.into();
+            Self { jobs: Mapping::default(), job_counter: 0, min_budget, owner: caller_h160 }
         }
 
         #[ink(message, payable)]
         pub fn submit_job(&mut self, model_ref: String, data_ref: String, deadline: u32, privacy_required: bool) -> u128 {
-            let caller: AccountId = self.env().caller().into();
-            let payment: Balance = self.env().transferred_value();
+            let caller: H160 = self.env().caller().into();
+            let payment: u128 = self.env().transferred_value().as_u128();
             assert!(payment >= self.min_budget, "Insufficient payment");
             assert!(deadline > self.env().block_number(), "Invalid deadline");
             self.job_counter = self.job_counter.saturating_add(1);
@@ -83,8 +86,8 @@ mod ai_job_queue {
         pub fn get_job(&self, job_id: u128) -> Option<Job> { self.jobs.get(job_id) }
 
         #[ink(message)]
-        pub fn assign_provider(&mut self, job_id: u128, provider: AccountId) -> bool {
-            let caller: AccountId = self.env().caller().into();
+        pub fn assign_provider(&mut self, job_id: u128, provider: H160) -> bool {
+            let caller: H160 = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if caller != job.owner || job.status != JobStatus::Registered { return false; }
                 job.assigned_provider = Some(provider);
@@ -97,7 +100,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn mark_in_progress(&mut self, job_id: u128) -> bool {
-            let caller: AccountId = self.env().caller().into();
+            let caller: H160 = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if job.assigned_provider != Some(caller) || job.status != JobStatus::Assigned { return false; }
                 job.status = JobStatus::InProgress;
@@ -109,7 +112,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn mark_completed(&mut self, job_id: u128, result_hash: String) -> bool {
-            let caller: AccountId = self.env().caller().into();
+            let caller: H160 = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if job.assigned_provider != Some(caller) || job.status != JobStatus::InProgress { return false; }
                 job.status = JobStatus::Completed;
@@ -121,7 +124,7 @@ mod ai_job_queue {
 
         #[ink(message)]
         pub fn cancel_job(&mut self, job_id: u128) -> bool {
-            let caller: AccountId = self.env().caller().into();
+            let caller: H160 = self.env().caller().into();
             if let Some(mut job) = self.jobs.get(job_id) {
                 if caller != job.owner || job.status == JobStatus::Completed { return false; }
                 job.status = JobStatus::Cancelled;
@@ -134,22 +137,24 @@ mod ai_job_queue {
         #[ink(message)]
         pub fn get_job_counter(&self) -> u128 { self.job_counter }
         #[ink(message)]
-        pub fn get_min_budget(&self) -> Balance { self.min_budget }
+        pub fn get_min_budget(&self) -> u128 { self.min_budget }
         #[ink(message)]
-        pub fn set_min_budget(&mut self, new_min_budget: Balance) -> bool {
-            if self.env().caller().into() != self.owner { return false; }
-            self.min_budget = new_min_budget; true
+        pub fn set_min_budget(&mut self, new_min_budget: u128) -> bool {
+            let caller: H160 = self.env().caller().into();
+            if caller != self.owner { return false; }
+            self.min_budget = new_min_budget;
+            true
         }
     }
 
     #[ink(event)]
-    pub struct JobSubmitted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: AccountId, pub budget: Balance }
+    pub struct JobSubmitted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub owner: H160, pub budget: u128 }
     #[ink(event)]
-    pub struct JobAssigned { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: AccountId }
+    pub struct JobAssigned { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160 }
     #[ink(event)]
     pub struct JobStatusChanged { #[ink(topic)] pub job_id: u128, pub new_status: JobStatus }
     #[ink(event)]
-    pub struct JobCompleted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: AccountId, pub result_hash: String }
+    pub struct JobCompleted { #[ink(topic)] pub job_id: u128, #[ink(topic)] pub provider: H160, pub result_hash: String }
     #[ink(event)]
     pub struct JobCancelled { #[ink(topic)] pub job_id: u128 }
 
@@ -157,11 +162,11 @@ mod ai_job_queue {
     mod tests {
         use super::*;
 
-        fn alice() -> AccountId { AccountId::from([1u8; 32]) }
-        fn bob() -> AccountId { AccountId::from([2u8; 32]) }
-        fn charlie() -> AccountId { AccountId::from([3u8; 32]) }
+        fn alice() -> H160 { H160::from([0x1; 20]) }
+        fn bob() -> H160 { H160::from([0x2; 20]) }
+        fn charlie() -> H160 { H160::from([0x3; 20]) }
 
-        fn set_caller(account: AccountId) {
+        fn set_caller(account: H160) {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
         }
 
@@ -189,17 +194,17 @@ mod ai_job_queue {
 
             let mut contract = AiJobQueue::new(1000u128);
             let job_id = contract.submit_job("model_uri".into(), "dataset_uri".into(), 500, true);
-            
+
             assert_eq!(job_id, 1);
             assert_eq!(contract.get_job_counter(), 1);
-            
+
             let job = contract.get_job(job_id).unwrap();
             assert_eq!(job.owner, alice());
             assert_eq!(job.model_ref, "model_uri");
             assert_eq!(job.data_ref, "dataset_uri");
             assert_eq!(job.deadline, 500);
             assert_eq!(job.privacy_required, true);
-            assert_eq!(job.budget, U256::from(1500));
+            assert_eq!(job.budget, 1500u128);
             assert_eq!(job.status, JobStatus::Registered);
         }
 
@@ -210,8 +215,8 @@ mod ai_job_queue {
             set_block_number(100);
             set_block_number(100);
             set_value(500); // Below minimum budget of 1000
-            
-            let mut contract = AiJobQueue::new(U256::from(1000));
+
+            let mut contract = AiJobQueue::new(1000u128);
             contract.submit_job("model".into(), "data".into(), 200, false);
         }
 
@@ -220,24 +225,24 @@ mod ai_job_queue {
             set_caller(alice());
             set_block_number(100);
             set_block_number(100);
-            
-            let mut contract = AiJobQueue::new(U256::from(500));
-            
+
+            let mut contract = AiJobQueue::new(500u128);
+
             set_value(1000);
             let job_id1 = contract.submit_job("model1".into(), "data1".into(), 300, true);
-            
+
             set_value(2000);
             let job_id2 = contract.submit_job("model2".into(), "data2".into(), 400, false);
-            
+
             assert_eq!(job_id1, 1);
             assert_eq!(job_id2, 2);
             assert_eq!(contract.get_job_counter(), 2);
-            
+
             let job1 = contract.get_job(job_id1).unwrap();
             let job2 = contract.get_job(job_id2).unwrap();
-            
-            assert_eq!(job1.budget, U256::from(1000));
-            assert_eq!(job2.budget, U256::from(2000));
+
+            assert_eq!(job1.budget, 1000u128);
+            assert_eq!(job2.budget, 2000u128);
             assert_eq!(job1.privacy_required, true);
             assert_eq!(job2.privacy_required, false);
         }
@@ -248,12 +253,12 @@ mod ai_job_queue {
             set_block_number(100);
             set_block_number(100);
             set_value(1000);
-            
-            let mut contract = AiJobQueue::new(U256::from(500));
+
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
-            
+
             assert!(contract.assign_provider(job_id, bob()));
-            
+
             let job = contract.get_job(job_id).unwrap();
             assert_eq!(job.assigned_provider, Some(bob()));
             assert_eq!(job.status, JobStatus::Assigned);
@@ -265,7 +270,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             
             set_caller(bob()); // Different caller
@@ -280,7 +285,7 @@ mod ai_job_queue {
         fn assign_provider_nonexistent_job_fails() {
             set_caller(alice());
             set_block_number(100);
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             
             assert!(!contract.assign_provider(999, bob()));
         }
@@ -291,7 +296,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             
             assert!(contract.assign_provider(job_id, bob()));
@@ -307,7 +312,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -324,7 +329,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -341,7 +346,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             
             set_caller(bob()); // Try to mark in progress without assignment
@@ -358,7 +363,7 @@ mod ai_job_queue {
             set_value(1000);
             set_block_number(100);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -378,7 +383,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -398,7 +403,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -416,7 +421,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             
             assert!(contract.cancel_job(job_id));
@@ -431,7 +436,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -447,7 +452,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 200, false);
             contract.assign_provider(job_id, bob());
             
@@ -468,7 +473,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -485,7 +490,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             contract.assign_provider(job_id, bob());
             
@@ -505,14 +510,14 @@ mod ai_job_queue {
         fn cancel_job_nonexistent_fails() {
             set_caller(alice());
             set_block_number(100);
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             
             assert!(!contract.cancel_job(999));
         }
 
         #[ink::test]
         fn get_job_nonexistent_returns_none() {
-            let contract = AiJobQueue::new(U256::from(500));
+            let contract = AiJobQueue::new(500u128);
             assert!(contract.get_job(999).is_none());
         }
 
@@ -523,7 +528,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             
             // Submit job
             let job_id = contract.submit_job("model_uri".into(), "dataset_uri".into(), 300, false);
@@ -556,7 +561,7 @@ mod ai_job_queue {
             set_block_number(100);
             set_value(1000);
             
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             let job_id = contract.submit_job("model".into(), "data".into(), 300, false);
             
             // Assign and start job
@@ -579,7 +584,7 @@ mod ai_job_queue {
         #[ink::test] 
         fn different_users_different_jobs() {
             set_block_number(100);
-            let mut contract = AiJobQueue::new(U256::from(500));
+            let mut contract = AiJobQueue::new(500u128);
             
             // Alice submits job
             set_caller(alice());
@@ -601,8 +606,8 @@ mod ai_job_queue {
             assert_eq!(bob_job_data.owner, bob());
             assert_eq!(alice_job_data.privacy_required, true);
             assert_eq!(bob_job_data.privacy_required, false);
-            assert_eq!(alice_job_data.budget, U256::from(1000));
-            assert_eq!(bob_job_data.budget, U256::from(1500));
+            assert_eq!(alice_job_data.budget, 1000u128);
+            assert_eq!(bob_job_data.budget, 1500u128);
         }
     }
 }
