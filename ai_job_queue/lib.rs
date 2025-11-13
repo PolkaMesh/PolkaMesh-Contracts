@@ -167,14 +167,17 @@ mod ai_job_queue {
         fn charlie() -> H160 { H160::from([0x3; 20]) }
 
         fn set_caller(account: H160) {
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
+            // ink! v6 test API: set_caller takes Address directly (no generics)
+            ink::env::test::set_caller(account);
         }
 
         fn set_value(amount: u128) {
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(amount);
+            // ink! v6 test API: expects U256 amount
+            ink::env::test::set_value_transferred(amount.into());
         }
 
         fn set_block_number(block: u32) {
+            // ink! v6 test API: set_block_number remains generic over Environment
             ink::env::test::set_block_number::<ink::env::DefaultEnvironment>(block);
         }
 

@@ -196,11 +196,11 @@ mod compute_provider_registry {
         fn charlie() -> H160 { H160::from([0x3; 20]) }
 
         fn set_caller(account: H160) {
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(account.into());
+            ink::env::test::set_caller(account.into());
         }
 
         fn set_value(amount: u128) {
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(amount);
+            ink::env::test::set_value_transferred(amount.into());
         }
 
         #[ink::test]

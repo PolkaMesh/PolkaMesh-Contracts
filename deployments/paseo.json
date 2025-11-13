@@ -4,11 +4,11 @@
   "lastUpdated": "2025-11-13T00:00:00Z",
   "contracts": {
     "paymentEscrow": {
-      "address": "0x5801b439a678d9d3a68b8019da6a4abfa507de11",
-      "codeHash": "0x91149095cfc7ecf4c1c8963ba5455bbf78431700f8668c908c25d987fd478768"
+      "address": "0x5a86a13ef7fc1c5e58f022be183de015dfb702ae",
+      "codeHash": "0x7bfff2dbd2e6783b711fa04a552b3646809e52d70cf35f13ed9f0ee27346bcb4"
     },
     "aiJobQueue": {
-      "address": "",
+      "address": "0xa44639cd0d0e6c6607491088c9c549e184456122",
       "codeHash": "0xbcfb1802a1260d9e54ab8bddf701f18f215de51022b62e377f4f534b4ea461e4"
     },
     "computeProviderRegistry": {
