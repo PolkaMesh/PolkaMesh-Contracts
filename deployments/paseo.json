@@ -1,0 +1,23 @@
+{
+  "network": "paseo-pop",
+  "rpcUrl": "wss://rpc1.paseo.popnetwork.xyz",
+  "lastUpdated": "2025-11-13T00:00:00Z",
+  "contracts": {
+    "paymentEscrow": {
+      "address": "0x5801b439a678d9d3a68b8019da6a4abfa507de11",
+      "codeHash": "0x91149095cfc7ecf4c1c8963ba5455bbf78431700f8668c908c25d987fd478768"
+    },
+    "aiJobQueue": {
+      "address": "",
+      "codeHash": "0xbcfb1802a1260d9e54ab8bddf701f18f215de51022b62e377f4f534b4ea461e4"
+    },
+    "computeProviderRegistry": {
+      "address": "0x2c6fc00458f198f46ef072e1516b83cd56db7cf5",
+      "codeHash": "0xbec9c69919bb7c8ff8beb470938afbb9f932bd8bbd15766d4776b018876e5ea6"
+    },
+    "dataNftRegistry": {
+      "address": "0x6dc84ddeffccb19ed5285cf3c3d7b03a57a9a4b1",
+      "codeHash": "0x039a46c338d197eea081066596fba9daf1ecee51d22c4a95b90784c75a5a3e14"
+    }
+  }
+}

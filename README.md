@@ -275,10 +275,57 @@ Researcher → receives_aggregated_model()
 
 ### Testnet Deployment
 
-1. Connect to Polkadot testnet (Rococo/Westend)
-2. Fund deployer account with testnet tokens
-3. Deploy contracts in order: Registry → Escrow → Queue → DataNFT
-4. Configure cross-contract references
+You have two easy options we’ve validated with ink! v6:
+
+#### A) Paseo Pop (ink! v6 / Revive)
+
+- RPC: `wss://rpc1.paseo.popnetwork.xyz`
+- Types: `Address = H160`, `Balance = U256`
+- Commands per contract:
+
+```bash
+# from each contract folder
+cargo contract build --release
+cargo contract upload --suri //Alice --url wss://rpc1.paseo.popnetwork.xyz -x
+
+# instantiate
+# payment_escrow
+cargo contract instantiate --constructor new --suri //Alice --url wss://rpc1.paseo.popnetwork.xyz --execute --skip-confirm
+
+# ai_job_queue (example: min budget = 1000)
+cargo contract instantiate --constructor new --args 1000 --suri //Alice --url wss://rpc1.paseo.popnetwork.xyz --execute --skip-confirm
+
+# compute_provider_registry (example: min stake = 500)
+cargo contract instantiate --constructor new --args 500 --suri //Alice --url wss://rpc1.paseo.popnetwork.xyz --execute --skip-confirm
+
+# data_nft_registry
+cargo contract instantiate --constructor new --suri //Alice --url wss://rpc1.paseo.popnetwork.xyz --execute --skip-confirm
+```
+
+Record the resulting contract addresses and code hashes (printed by the CLI) into `deployments/paseo.template.json` and save a copy as `deployments/paseo.json`.
+
+Notes:
+
+- On Revive chains you may see warnings about type comparison; this is expected.
+- If a mapping pallet is enabled on a given runtime, map the account once via the UI before calls.
+
+#### B) Passet Hub Testnet (ink! v6)
+
+- RPC: `wss://testnet-passet-hub.polkadot.io`
+- Prereqs: funded test account (PAS faucet), cargo-contract 6.x
+
+```bash
+# build
+cargo contract build --release
+
+# upload
+cargo contract upload --suri "<seed_or_//Alice>" --url wss://testnet-passet-hub.polkadot.io -x
+
+# instantiate per contract (adjust constructor args as needed)
+cargo contract instantiate --constructor new --suri "<seed_or_//Alice>" --url wss://testnet-passet-hub.polkadot.io --execute --skip-confirm
+```
+
+Copy addresses into `deployments/passet-hub.template.json` and save as `deployments/passet-hub.json`.
 
 ### Mainnet Considerations
 
