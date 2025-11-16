@@ -1,21 +1,33 @@
 [package]
 name = "mev_protection"
 version = "0.1.0"
+authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "5.0", default-features = false, features = ["std"] }
-scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2", default-features = false, features = ["derive"] }
+ink = { version = "5.0.2", default-features = false }
+parity-scale-codec = { package = "parity-scale-codec", version = "3.6", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+ink_e2e = { version = "5.0.2" }
 
 [lib]
 path = "src/lib.rs"
 
 [features]
 default = ["std"]
-std = ["ink/std", "scale/std", "scale-info/std"]
+std = [
+    "ink/std",
+]
+ink-as-dependency = []
+e2e-tests = []
 
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
+[package.metadata.ink-lang]
+abi = "ink"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    'cfg(ink_abi, values("ink", "sol", "all"))'
+]

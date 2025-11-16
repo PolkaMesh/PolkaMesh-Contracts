@@ -18,6 +18,16 @@
     "dataNftRegistry": {
       "address": "0x6dc84ddeffccb19ed5285cf3c3d7b03a57a9a4b1",
       "codeHash": "0x039a46c338d197eea081066596fba9daf1ecee51d22c4a95b90784c75a5a3e14"
+    },
+    "phalaJobProcessor": {
+      "address": "5HrKZAiTSAFcuxda89kSD77ZdygRUkufwRnGKgfGFR4NC2np",
+      "codeHash": "0x7086fddde65c083d00210feaae8fc333f3cb2254220f71834d55fa316a54c9d6",
+      "notes": "Redeployed using ink 5.x; AccountId (SS58) format address"
+    },
+    "mevProtection": {
+      "address": "5DTPZHSHydkPQZbTFrhnHtZiDER7uoKSzdYHuCUXVAtjajXs",
+      "codeHash": "0x9949de08fb997fafab3ee00110b252c2625281abf439093a2b85245cc2475233",
+      "notes": "AccountId (SS58) format used after downgrading to ink 5.x; previous codeHash replaced"
     }
   }
 }

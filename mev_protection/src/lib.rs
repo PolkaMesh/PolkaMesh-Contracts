@@ -18,6 +18,8 @@ mod mev_protection {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
     use ink::storage::Mapping;
+    // ink 5.x does not expose an H160 primitive. Alias H160 to the environment's AccountId (32 bytes) for compatibility.
+    type H160 = AccountId;
 
     // ===== DATA STRUCTURES =====
 
@@ -57,7 +59,7 @@ mod mev_protection {
     )]
     pub struct Intent {
         pub intent_id: u128,
-        pub user: AccountId,
+        pub user: H160,
         pub encrypted_intent: String,
         pub token_in: String,
         pub token_out: String,
@@ -127,8 +129,8 @@ mod mev_protection {
         intent_counter: u128,
         /// Counter for batch IDs
         batch_counter: u128,
-        /// Admin address
-        admin: AccountId,
+        /// Admin address for contract management
+        admin: H160,
         /// Batch size (max intents per batch)
         batch_size: u32,
         /// Minimum intents to form a batch
@@ -136,6 +138,13 @@ mod mev_protection {
     }
 
     // ===== IMPLEMENTATION =====
+
+    // Provide a Default implementation to allow instantiation via default() in tests and silence lint
+    impl Default for MEVProtection {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
 
     impl MEVProtection {
         /// Creates a new MEVProtection contract
@@ -173,7 +182,7 @@ mod mev_protection {
             token_out: String,
             min_output: u128,
         ) -> u128 {
-            let caller: AccountId = self.env().caller();
+            let caller: H160 = self.env().caller().into();
 
             self.intent_counter = self.intent_counter.saturating_add(1);
             let intent_id = self.intent_counter;
@@ -210,27 +219,30 @@ mod mev_protection {
             intent_ids: Vec<u128>,
             execution_route: String,
         ) -> u128 {
-            // Validate batch size
-            let intent_count = intent_ids.len() as u32;
+            // Validate batch size safely converting length
+            let intent_count = match u32::try_from(intent_ids.len()) {
+                Ok(c) => c,
+                Err(_) => return 0, // Too many intents to fit in u32
+            };
             if intent_count < self.min_batch_size || intent_count > self.batch_size {
                 return 0; // Invalid batch size
             }
 
-            // Calculate total volume
+            // Assign a new batch id
+            self.batch_counter = self.batch_counter.saturating_add(1);
+            let batch_id = self.batch_counter;
+
+            // Calculate total volume & update intents
             let mut total_volume: u128 = 0;
             for intent_id in &intent_ids {
                 if let Some(intent) = self.intents.get(intent_id) {
                     total_volume = total_volume.saturating_add(intent.min_output);
-                    // Update intent status to Batched
-                    let mut updated_intent = intent.clone();
-                    updated_intent.status = IntentStatus::Batched;
-                    updated_intent.batch_id = Some(self.batch_counter + 1);
-                    self.intents.insert(*intent_id, &updated_intent);
+                    let mut updated = intent.clone();
+                    updated.status = IntentStatus::Batched;
+                    updated.batch_id = Some(batch_id);
+                    self.intents.insert(*intent_id, &updated);
                 }
             }
-
-            self.batch_counter = self.batch_counter.saturating_add(1);
-            let batch_id = self.batch_counter;
 
             let batch = Batch {
                 batch_id,
@@ -359,7 +371,8 @@ mod mev_protection {
         /// Sets batch size configuration
         #[ink(message)]
         pub fn set_batch_config(&mut self, batch_size: u32, min_batch_size: u32) -> bool {
-            if self.env().caller() != self.admin {
+            let caller: H160 = self.env().caller();
+            if caller != self.admin {
                 return false;
             }
 
