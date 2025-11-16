@@ -20,6 +20,8 @@
 mod phala_job_processor {
     use ink::prelude::string::String;
     use ink::storage::Mapping;
+    // ink 5.x compatibility: alias H160 to AccountId (32 bytes)
+    type H160 = AccountId;
 
     // ===== DATA STRUCTURES =====
 
@@ -38,7 +40,7 @@ mod phala_job_processor {
     )]
     pub struct ConfidentialJob {
         pub job_id: u128,
-        pub owner: AccountId,
+        pub owner: H160,
         pub encrypted_payload: String,
         pub public_key: String,
         pub created_at: u64,
@@ -77,10 +79,14 @@ mod phala_job_processor {
         /// Counter for job IDs
         job_counter: u128,
         /// Admin address for contract management
-        admin: AccountId,
+        admin: H160,
     }
 
     // ===== IMPLEMENTATION =====
+
+    impl Default for PhalaJobProcessor {
+        fn default() -> Self { Self::new() }
+    }
 
     impl PhalaJobProcessor {
         /// Creates a new PhalaJobProcessor contract
@@ -110,7 +116,7 @@ mod phala_job_processor {
             encrypted_payload: String,
             public_key: String,
         ) -> u128 {
-            let caller: AccountId = self.env().caller();
+            let caller: H160 = self.env().caller();
 
             self.job_counter = self.job_counter.saturating_add(1);
             let job_id = self.job_counter;
