@@ -325,46 +325,9 @@ graph TD
     CPR --> AJQ
     DNR --> AJQ
     AJQ --> MEV
-
-    classDef provider fill:#e3f2fd
-    classDef data fill:#e8f5e8
-    classDef contract fill:#fff9c4
-
-    class P1,P2,P3 provider
-    class D1,D2,D3 data
-    class CPR,DNR,AJQ,MEV contract
 ```
 
 ## 🛠️ Development Setup
-
-````
-
-## � Contract Interaction Matrix
-
-| From Contract         | To Contract       | Interaction Type            | Purpose                      |
-| --------------------- | ----------------- | --------------------------- | ---------------------------- |
-| **AI Job Queue**      | Payment Escrow    | `deposit_escrow()`          | Lock payment for job         |
-| **AI Job Queue**      | Provider Registry | `get_provider_info()`       | Verify provider capabilities |
-| **AI Job Queue**      | Data NFT Registry | `verify_data_access()`      | Check data permissions       |
-| **AI Job Queue**      | Phala Processor   | `submit_confidential_job()` | Route private jobs           |
-| **Phala Processor**   | Payment Escrow    | `release_payment()`         | Release after attestation    |
-| **MEV Protection**    | Payment Escrow    | `deposit_escrow()`          | Lock trading capital         |
-| **Provider Registry** | Payment Escrow    | `slash_stake()`             | Penalize bad actors          |
-| **Data NFT Registry** | Payment Escrow    | `distribute_rewards()`      | Pay data owners              |
-| **MEV Protection**    | AI Job Queue      | `submit_job()`              | Request routing optimization |
-
-## 📊 Contract Capabilities Overview
-
-| Contract              | Read Operations                            | Write Operations                                    | Events                                | Integration Points  |
-| --------------------- | ------------------------------------------ | --------------------------------------------------- | ------------------------------------- | ------------------- |
-| **AI Job Queue**      | `get_job()`, `list_jobs()`                 | `submit_job()`, `assign_provider()`                 | `JobSubmitted`, `JobCompleted`        | All other contracts |
-| **Payment Escrow**    | `get_balance()`, `get_escrow()`            | `deposit()`, `release()`, `refund()`                | `PaymentDeposited`, `PaymentReleased` | All contracts       |
-| **Provider Registry** | `get_provider()`, `list_providers()`       | `register()`, `submit_bid()`                        | `ProviderRegistered`, `BidSubmitted`  | Job Queue, Escrow   |
-| **Data NFT Registry** | `get_nft()`, `check_access()`              | `mint_nft()`, `purchase_subscription()`             | `NFTMinted`, `AccessGranted`          | Job Queue, Escrow   |
-| **Phala Processor**   | `get_job_status()`, `verify_attestation()` | `submit_confidential_job()`, `record_attestation()` | `JobSubmitted`, `AttestationRecorded` | Job Queue, Escrow   |
-| **MEV Protection**    | `get_intent()`, `get_batch_stats()`        | `submit_intent()`, `create_batch()`                 | `IntentSubmitted`, `BatchExecuted`    | Escrow, Job Queue   |
-
-## �🛠️ Development Setup
 
 ### Prerequisites
 
@@ -381,7 +344,7 @@ wget https://github.com/use-ink/ink-node/releases/download/v0.45.1/ink-node-linu
 tar -xzf ink-node-linux.tar.gz
 chmod +x ./ink-node
 sudo mv ./ink-node /usr/local/bin/
-````
+```
 
 ### Build All Contracts
 
@@ -419,7 +382,7 @@ xargs -I {} -P 6 sh -c 'cd {} && cargo contract build'
 
 ```bash
 # Start ink-node for local testing
-ink-node --dev --tmp
+ink-node --dev
 
 # Access via Polkadot.js Apps
 # https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:9944
